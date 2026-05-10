@@ -1,0 +1,2575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ladakh Brown Bear Detection & Offline Alert System — Complete Engineering Guide</title>
+<style>
+:root {
+  --bg: #0a0d12;
+  --bg2: #111520;
+  --bg3: #171c28;
+  --card: #1a2030;
+  --border: rgba(100,140,220,0.15);
+  --accent: #3b82f6;
+  --accent2: #06b6d4;
+  --accent3: #f59e0b;
+  --accent4: #10b981;
+  --danger: #ef4444;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --code-bg: #0d1117;
+  --code-border: rgba(100,140,220,0.2);
+  --highlight: rgba(59,130,246,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.hero {
+  background: linear-gradient(135deg, #0a1628 0%, #111e35 40%, #0d1a2e 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 60px 40px 48px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  max-width: 700px;
+}
+.hero h1 span { color: var(--accent); }
+.hero-sub {
+  color: var(--text2);
+  font-size: 15px;
+  max-width: 600px;
+  margin-bottom: 28px;
+}
+.hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tag {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+.tag.warn { border-color: rgba(245,158,11,0.4); color: #f59e0b; background: rgba(245,158,11,0.06); }
+.tag.ok { border-color: rgba(16,185,129,0.4); color: #10b981; background: rgba(16,185,129,0.06); }
+.layout {
+  display: flex;
+  min-height: calc(100vh - 200px);
+}
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.sidebar h3 {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 8px 20px 6px;
+  margin-top: 8px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 13px;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.nav-item:hover { background: var(--highlight); color: var(--text); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(59,130,246,0.06); }
+.nav-num {
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--bg3);
+  color: var(--text3);
+  width: 18px; height: 18px;
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.content {
+  flex: 1;
+  padding: 40px 48px;
+  max-width: 900px;
+}
+.section { display: none; }
+.section.active { display: block; }
+
+/* Part headers */
+.part-header {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px 28px;
+  margin-bottom: 32px;
+}
+.part-num {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.part-title { font-size: 24px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+.part-desc { color: var(--text2); font-size: 14px; }
+
+/* Content elements */
+h2 { font-size: 18px; font-weight: 600; color: #e2e8f0; margin: 32px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+h3 { font-size: 15px; font-weight: 600; color: #cbd5e1; margin: 24px 0 8px; }
+h4 { font-size: 13px; font-weight: 600; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.06em; margin: 20px 0 6px; }
+p { margin-bottom: 12px; color: var(--text2); }
+
+/* Code blocks */
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 8px;
+  padding: 20px;
+  overflow-x: auto;
+  margin: 16px 0;
+  font-size: 13px;
+  line-height: 1.6;
+  position: relative;
+}
+code {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  color: #e2e8f0;
+}
+pre code { color: #e2e8f0; }
+.cmd { color: #86efac; }
+.comment { color: #64748b; font-style: italic; }
+.string { color: #fbbf24; }
+.keyword { color: #93c5fd; }
+.func { color: #c4b5fd; }
+.num { color: #f97316; }
+.tag-code { color: #6ee7b7; }
+.copy-label {
+  position: absolute;
+  top: 8px; right: 10px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  text-transform: uppercase;
+  background: var(--bg3);
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+/* Callout boxes */
+.callout {
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  border-left: 3px solid;
+}
+.callout.info { background: rgba(59,130,246,0.07); border-color: #3b82f6; }
+.callout.warn { background: rgba(245,158,11,0.07); border-color: #f59e0b; }
+.callout.success { background: rgba(16,185,129,0.07); border-color: #10b981; }
+.callout.danger { background: rgba(239,68,68,0.07); border-color: #ef4444; }
+.callout strong { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.callout.info strong { color: #60a5fa; }
+.callout.warn strong { color: #fbbf24; }
+.callout.success strong { color: #34d399; }
+.callout.danger strong { color: #f87171; }
+.callout p { color: var(--text2); margin-bottom: 0; font-size: 14px; }
+
+/* ASCII diagrams */
+.ascii {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin: 16px 0;
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #94a3b8;
+  overflow-x: auto;
+  white-space: pre;
+}
+.ascii .hi { color: #60a5fa; }
+.ascii .gr { color: #34d399; }
+.ascii .yw { color: #fbbf24; }
+.ascii .rd { color: #f87171; }
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+th {
+  background: var(--bg3);
+  color: var(--accent2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(100,140,220,0.07);
+  color: var(--text2);
+  vertical-align: top;
+}
+tr:hover td { background: var(--highlight); }
+td:first-child { color: var(--text); font-weight: 500; }
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+.badge.green { background: rgba(16,185,129,0.15); color: #34d399; }
+.badge.blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.badge.amber { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.badge.red { background: rgba(239,68,68,0.15); color: #f87171; }
+
+/* Step cards */
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(100,140,220,0.08);
+}
+.step:last-child { border-bottom: none; }
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.step-content h4 { margin: 0 0 4px; font-size: 14px; color: var(--text); }
+.step-content p { margin: 0; font-size: 13px; }
+
+/* Hardware cards */
+.hw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+.hw-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+.hw-card h4 { font-size: 13px; color: var(--text); margin-bottom: 8px; }
+.hw-card .model { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+.hw-card .spec-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(100,140,220,0.07); }
+.hw-card .spec-row:last-child { border-bottom: none; }
+.hw-card .spec-label { color: var(--text3); }
+.hw-card .spec-val { color: var(--text2); font-weight: 500; }
+
+/* Flow diagram */
+.flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 16px 0;
+}
+.flow-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+.flow-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40px;
+}
+.flow-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.flow-dot.active { background: var(--accent); }
+.flow-line {
+  width: 2px;
+  flex: 1;
+  background: linear-gradient(to bottom, var(--accent), rgba(59,130,246,0.2));
+  min-height: 30px;
+}
+.flow-content {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 0 0 8px 8px;
+}
+.flow-content h4 { font-size: 13px; color: var(--text); margin-bottom: 3px; }
+.flow-content p { font-size: 12px; color: var(--text3); margin: 0; }
+
+/* Tier recommendation */
+.tier-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 16px 0; }
+.tier-card {
+  border-radius: 10px;
+  padding: 18px;
+  border: 1px solid;
+}
+.tier-card.budget { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+.tier-card.mid { border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.05); }
+.tier-card.pro { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+.tier-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+.tier-card.budget .tier-label { color: #34d399; }
+.tier-card.mid .tier-label { color: #60a5fa; }
+.tier-card.pro .tier-label { color: #fbbf24; }
+.tier-price { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.tier-items { font-size: 12px; color: var(--text2); line-height: 1.8; }
+
+/* Compare table */
+.compare-row { display: grid; gap: 12px; margin-bottom: 12px; }
+.compare-col {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+
+/* Section nav tabs */
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+.tab {
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  border-radius: 4px 4px 0 0;
+}
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(59,130,246,0.04); }
+
+/* Checklist */
+.checklist { list-style: none; margin: 12px 0; }
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text2);
+  border-bottom: 1px solid rgba(100,140,220,0.05);
+}
+.checklist li::before {
+  content: '✓';
+  width: 18px; height: 18px;
+  border-radius: 3px;
+  background: rgba(16,185,129,0.12);
+  color: #34d399;
+  font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Inline code */
+.ic {
+  background: rgba(100,140,220,0.1);
+  border: 1px solid rgba(100,140,220,0.18);
+  color: #93c5fd;
+  font-family: 'Cascadia Code', monospace;
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { padding: 24px; }
+  .tier-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">🐻 Production Engineering Guide</div>
+  <h1>Ladakh Brown Bear Detection<br><span>&amp; Offline Alert System</span></h1>
+  <p class="hero-sub">Complete beginner-to-production guide for deploying an AI-powered wildlife alert system in remote Himalayan villages — fully offline, no internet, no cloud.</p>
+  <div class="hero-tags">
+    <span class="tag warn">⚠ No Internet Required</span>
+    <span class="tag ok">✓ Fully Offline</span>
+    <span class="tag">NVIDIA Jetson Orin Nano</span>
+    <span class="tag">Flutter Mobile App</span>
+    <span class="tag">FastAPI Backend</span>
+    <span class="tag">WebSocket + MQTT</span>
+    <span class="tag">Solar Powered</span>
+    <span class="tag">Mountain Deployment</span>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <h3>System Guide</h3>
+    <a class="nav-item active" onclick="show('p1')" href="#"><span class="nav-num">1</span>Architecture</a>
+    <a class="nav-item" onclick="show('p2')" href="#"><span class="nav-num">2</span>Hardware</a>
+    <a class="nav-item" onclick="show('p3')" href="#"><span class="nav-num">3</span>Jetson Setup</a>
+    <a class="nav-item" onclick="show('p4')" href="#"><span class="nav-num">4</span>Offline Networking</a>
+    <a class="nav-item" onclick="show('p5')" href="#"><span class="nav-num">5</span>Backend Code</a>
+    <a class="nav-item" onclick="show('p6')" href="#"><span class="nav-num">6</span>Flutter App</a>
+    <a class="nav-item" onclick="show('p7')" href="#"><span class="nav-num">7</span>Live Streaming</a>
+    <a class="nav-item" onclick="show('p8')" href="#"><span class="nav-num">8</span>Range & Mountains</a>
+    <a class="nav-item" onclick="show('p9')" href="#"><span class="nav-num">9</span>Mesh Networking</a>
+    <a class="nav-item" onclick="show('p10')" href="#"><span class="nav-num">10</span>Power System</a>
+    <a class="nav-item" onclick="show('p11')" href="#"><span class="nav-num">11</span>Deployment Guide</a>
+    <a class="nav-item" onclick="show('p12')" href="#"><span class="nav-num">12</span>Final Production</a>
+  </nav>
+
+  <main class="content">
+
+    <!-- PART 1: ARCHITECTURE -->
+    <section id="p1" class="section active">
+      <div class="part-header">
+        <div class="part-num">Part 1</div>
+        <div class="part-title">Complete System Architecture</div>
+        <div class="part-desc">Overall data flow, communication topology, and offline networking design for the Ladakh deployment.</div>
+      </div>
+
+      <h2>What Is This System?</h2>
+      <p>Imagine a smart watchman that never sleeps. A camera connected to a mini-computer (Jetson) watches the village boundary. When a brown bear appears, the computer identifies it using AI, takes a photo, and instantly sends it to every ranger's phone — completely without internet.</p>
+
+      <h2>System Flow Overview</h2>
+      <div class="flow">
+        <div class="flow-item"><div class="flow-left"><div class="flow-dot active"></div><div class="flow-line"></div></div><div class="flow-content"><h4>📷 Step 1 — Camera Captures</h4><p>Camera continuously films the perimeter. Jetson processes each frame through the AI model.</p></div></div>
+        <div class="flow-item"><div class="flow-left"><div class="flow-dot active"></div><div class="flow-line"></div></div><div class="flow-content"><h4>🧠 Step 2 — AI Detects Bear</h4><p>YOLOv8 model runs on Jetson GPU. If confidence &gt; 70%, a bear is confirmed. Alert triggered.</p></div></div>
+        <div class="flow-item"><div class="flow-left"><div class="flow-dot active"></div><div class="flow-line"></div></div><div class="flow-content"><h4>📡 Step 3 — WiFi Hotspot Active</h4><p>Jetson is always broadcasting a local WiFi hotspot. No router needed. It IS the router.</p></div></div>
+        <div class="flow-item"><div class="flow-left"><div class="flow-dot active"></div><div class="flow-line"></div></div><div class="flow-content"><h4>📱 Step 4 — App Auto-Connects</h4><p>Ranger's phone (connected to Jetson WiFi) receives WebSocket push. App wakes up instantly.</p></div></div>
+        <div class="flow-item"><div class="flow-left"><div class="flow-dot active"></div><div class="flow-line"></div></div><div class="flow-content"><h4>🖼 Step 5 — Image + Alert Delivered</h4><p>App shows: bear photo, timestamp, GPS coords, confidence score, and a map pin.</p></div></div>
+        <div class="flow-item"><div class="flow-left"><div class="flow-dot active"></div><div class="flow-line"></div></div><div class="flow-content"><h4>✅ Step 6 — Ranger Confirms</h4><p>Ranger taps "Confirm Bear" on the app after reviewing the image.</p></div></div>
+        <div class="flow-item"><div class="flow-left"><div class="flow-dot"></div><div class="flow-line"></div></div><div class="flow-content"><h4>🔔 Step 7 — Buzzer Activated</h4><p>Ranger taps "Activate Siren". Command travels back to Jetson over WiFi. GPIO triggers buzzer.</p></div></div>
+        <div class="flow-item"><div class="flow-left"><div class="flow-dot"></div></div><div class="flow-content"><h4>📋 Step 8 — Logged & Stored</h4><p>Event is saved locally on both Jetson and app — image, time, action taken. No cloud needed.</p></div></div>
+      </div>
+
+      <h2>Architecture Diagram</h2>
+      <div class="ascii">
+┌─────────────────────────────────────────────────────────────────┐
+│                    LADAKH BEAR ALERT SYSTEM                     │
+│                    (Fully Offline Operation)                     │
+└─────────────────────────────────────────────────────────────────┘
+
+                         FIELD UNIT
+  ┌──────────────────────────────────────────────────────────┐
+  │  ☀ Solar Panel                                           │
+  │      │                                                   │
+  │  [Battery Pack] ──── [Voltage Regulator]                 │
+  │                              │                           │
+  │  ┌───────────────────────────┴───────────────────────┐   │
+  │  │          NVIDIA Jetson Orin Nano                  │   │
+  │  │                                                   │   │
+  │  │  ┌──────────┐  ┌──────────┐  ┌────────────────┐  │   │
+  │  │  │ Camera   │  │ AI Model │  │ FastAPI Server │  │   │
+  │  │  │ (USB/CSI)│→ │(YOLOv8) │→ │ WebSocket      │  │   │
+  │  │  └──────────┘  └──────────┘  │ MQTT Broker    │  │   │
+  │  │                              └───────┬────────┘  │   │
+  │  │  ┌──────────┐                        │           │   │
+  │  │  │  GPIO    │←───── Buzzer CMD ───────┤           │   │
+  │  │  │ Buzzer   │                        │           │   │
+  │  │  └──────────┘                        │           │   │
+  │  │                              ┌───────┴────────┐  │   │
+  │  │                              │  WiFi Hotspot  │  │   │
+  │  │                              │  192.168.100.1 │  │   │
+  │  └──────────────────────────────└───────┬────────┘  │   │
+  └──────────────────────────────────────── │ ──────────┘   │
+                                            │ (WiFi Signal)  │
+                              ┌─────────────┴──────────────┐
+                              │     RANGER DEVICES         │
+                              │                            │
+                              │  📱 Phone 1               │
+                              │  [Flutter App]            │
+                              │  IP: 192.168.100.10       │
+                              │                            │
+                              │  📱 Phone 2               │
+                              │  [Flutter App]            │
+                              │  IP: 192.168.100.11       │
+                              └────────────────────────────┘
+
+IP ADDRESSING (all local — no internet):
+  Jetson:   192.168.100.1  (Gateway / Server)
+  Phone 1:  192.168.100.10
+  Phone 2:  192.168.100.11
+  ...up to 10 devices connected simultaneously
+
+COMMUNICATION PROTOCOLS:
+  Image Push  →  WebSocket  ws://192.168.100.1:8000/ws
+  Commands    →  WebSocket  ws://192.168.100.1:8000/ws
+  Events      →  MQTT       mqtt://192.168.100.1:1883
+  Video Feed  →  RTSP       rtsp://192.168.100.1:8554/stream
+      </div>
+
+      <h2>Village Topology Map</h2>
+      <div class="ascii">
+VILLAGE DEPLOYMENT MAP — SINGLE UNIT (Basic)
+
+                 ╔════════════════════════╗
+                 ║   VILLAGE BOUNDARY     ║
+                 ╚════════════════════════╝
+
+    Mountain                              Mountain
+    Wall                                  Wall
+    ████████                              ████████
+    ████████   ┌──────────────────┐       ████████
+               │ Jetson Unit      │
+               │ [Camera facing   │◄── 120° view
+               │  fields/forest]  │
+               │                  │
+               │ WiFi Range:      │
+               │ ≈150m radius     │
+               └────────┬─────────┘
+                        │ WiFi
+            ┌───────────┼───────────┐
+            │           │           │
+          📱 Guard    📱 Ranger   📱 Villager
+           Hut        Post        Leader
+
+MULTI-UNIT VILLAGE DEPLOYMENT (Larger Area):
+
+  [Unit A]──WiFi──📱  [Unit B]──WiFi──📱
+     │                    │
+     │   LoRa Radio        │   LoRa Radio
+     │   (long range)      │
+     └──────── LoRa ───────┘
+       (Units talk to each other via LoRa)
+       (Each unit covers different angles)
+      </div>
+
+      <h2>Data Flow Diagram</h2>
+      <div class="ascii">
+┌────────────────── DATA FLOW ──────────────────────────────┐
+│                                                           │
+│  DETECTION EVENT:                                         │
+│                                                           │
+│  Camera Frame                                             │
+│      │                                                    │
+│      ▼                                                    │
+│  YOLOv8 Model ──── No Bear ──────► Discard Frame         │
+│      │                                                    │
+│      │ Bear Detected!                                     │
+│      ▼                                                    │
+│  Capture Full Image (JPEG, compressed to ~200KB)          │
+│      │                                                    │
+│      ▼                                                    │
+│  Save to Local Storage: /data/events/YYYY-MM-DD/         │
+│      │                                                    │
+│      ▼                                                    │
+│  Create Alert Packet (JSON):                             │
+│  {                                                        │
+│    "type": "bear_alert",                                  │
+│    "timestamp": "2024-01-15T09:23:11",                   │
+│    "confidence": 0.94,                                    │
+│    "image_b64": "...",    ← base64 encoded image          │
+│    "camera_id": "cam_01",                                 │
+│    "location": "North Gate"                               │
+│  }                                                        │
+│      │                                                    │
+│      ▼                                                    │
+│  WebSocket Server ──► Broadcast to ALL connected phones   │
+│      │                                                    │
+│      ▼                                                    │
+│  MQTT Broker ──────► Publish to topic: bears/alert        │
+│      │                                                    │
+│      ▼                                                    │
+│  App displays alert                                       │
+│                                                           │
+│  BUZZER COMMAND (reverse flow):                          │
+│                                                           │
+│  Ranger taps "Activate Buzzer" on app                    │
+│      │                                                    │
+│      ▼                                                    │
+│  App sends: {"command": "buzzer_on", "duration": 30}      │
+│      │ (WebSocket)                                        │
+│      ▼                                                    │
+│  Jetson receives command                                  │
+│      │                                                    │
+│      ▼                                                    │
+│  GPIO Pin 18 → HIGH → Relay → Buzzer ACTIVATES ✓         │
+└───────────────────────────────────────────────────────────┘
+      </div>
+
+      <div class="callout success">
+        <strong>Key Design Principle</strong>
+        <p>The Jetson is both the "brain" (AI detection) and the "router" (WiFi hotspot). There is NO external router. The Jetson creates its own small WiFi network, like a mobile hotspot on your phone — but permanent and automatic.</p>
+      </div>
+    </section>
+
+    <!-- PART 2: HARDWARE -->
+    <section id="p2" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 2</div>
+        <div class="part-title">Complete Hardware Requirements</div>
+        <div class="part-desc">Every component needed, with exact models, wiring, power requirements, and alternatives at three budget levels.</div>
+      </div>
+
+      <h2>Budget Tiers</h2>
+      <div class="tier-grid">
+        <div class="tier-card budget">
+          <div class="tier-label">💚 Low Cost</div>
+          <div class="tier-price">~$450 USD</div>
+          <div class="tier-items">Basic WiFi<br>USB Camera<br>Small Battery<br>2x Phones</div>
+        </div>
+        <div class="tier-card mid">
+          <div class="tier-label">🔵 Mid Range</div>
+          <div class="tier-price">~$900 USD</div>
+          <div class="tier-items">High-gain Antenna<br>PTZ Camera<br>LoRa Radio<br>Large Solar Array</div>
+        </div>
+        <div class="tier-card pro">
+          <div class="tier-label">🟡 Professional</div>
+          <div class="tier-price">~$1,800 USD</div>
+          <div class="tier-items">Mesh WiFi Nodes<br>Thermal Camera<br>Multi-day Battery<br>Full Weatherproofing</div>
+        </div>
+      </div>
+
+      <h2>Core Hardware List</h2>
+
+      <h3>1. Main Computing Unit</h3>
+      <div class="hw-grid">
+        <div class="hw-card">
+          <div class="model">NVIDIA Jetson Orin Nano (8GB)</div>
+          <h4>AI Processing Core</h4>
+          <div class="spec-row"><span class="spec-label">CPU</span><span class="spec-val">6-core ARM Cortex-A78AE</span></div>
+          <div class="spec-row"><span class="spec-label">GPU</span><span class="spec-val">1024-core Ampere NVIDIA</span></div>
+          <div class="spec-row"><span class="spec-label">AI Performance</span><span class="spec-val">40 TOPS</span></div>
+          <div class="spec-row"><span class="spec-label">RAM</span><span class="spec-val">8GB LPDDR5</span></div>
+          <div class="spec-row"><span class="spec-label">Storage</span><span class="spec-val">128GB microSD or NVMe</span></div>
+          <div class="spec-row"><span class="spec-label">Power</span><span class="spec-val">7W–15W</span></div>
+          <div class="spec-row"><span class="spec-label">Cost</span><span class="spec-val">~$200 USD</span></div>
+          <div class="spec-row"><span class="spec-label">Why?</span><span class="spec-val">Runs YOLOv8 at 30 FPS offline</span></div>
+        </div>
+      </div>
+
+      <h3>2. Camera Options</h3>
+      <table>
+        <thead><tr><th>Camera</th><th>Type</th><th>Resolution</th><th>Night Vision</th><th>Cost</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr><td>Raspberry Pi Camera V3</td><td>CSI</td><td>12MP</td><td>No</td><td>$25</td><td>Budget daytime</td></tr>
+          <tr><td>Arducam IMX477</td><td>CSI</td><td>12MP</td><td>No</td><td>$45</td><td>High quality</td></tr>
+          <tr><td>Hikvision DS-2CD2143</td><td>USB/IP</td><td>4MP</td><td>IR 30m</td><td>$80</td><td>Night detection</td></tr>
+          <tr><td>FLIR Lepton 3.5</td><td>SPI</td><td>Thermal</td><td>Full dark</td><td>$200</td><td>Pro/night only</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <strong>Recommendation for Ladakh</strong>
+        <p>Use the <strong>Hikvision DS-2CD2143G2-I</strong> with built-in IR LED night vision (range 40m) and IP66 weatherproofing. Bears are most active at dawn/dusk. This camera covers both daytime and night, and handles -30°C cold.</p>
+      </div>
+
+      <h3>3. WiFi Module / Antenna</h3>
+      <table>
+        <thead><tr><th>Module</th><th>Range (open)</th><th>Frequency</th><th>Cost</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Intel AX200 (built-in Jetson kit)</td><td>50–80m</td><td>2.4/5 GHz</td><td>Included</td><td>Good for close range</td></tr>
+          <tr><td>TP-Link TL-WN722N + 9dBi antenna</td><td>200–400m</td><td>2.4 GHz</td><td>$25</td><td>Best budget upgrade</td></tr>
+          <tr><td>Alfa AWUS036ACH + 14dBi panel</td><td>500–800m</td><td>2.4/5 GHz</td><td>$70</td><td>Mountain villages</td></tr>
+          <tr><td>Ubiquiti Bullet M2 + 24dBi dish</td><td>2–5 km</td><td>2.4 GHz</td><td>$180</td><td>Long relay links</td></tr>
+        </tbody>
+      </table>
+
+      <h3>4. Buzzer / Siren Module</h3>
+      <div class="hw-grid">
+        <div class="hw-card">
+          <div class="model">12V DC Electric Horn Siren</div>
+          <h4>Alert Output</h4>
+          <div class="spec-row"><span class="spec-label">Voltage</span><span class="spec-val">12V DC</span></div>
+          <div class="spec-row"><span class="spec-label">Current</span><span class="spec-val">0.5A (controlled via relay)</span></div>
+          <div class="spec-row"><span class="spec-label">Sound Level</span><span class="spec-val">110dB</span></div>
+          <div class="spec-row"><span class="spec-label">Range</span><span class="spec-val">Audible 300–500m</span></div>
+          <div class="spec-row"><span class="spec-label">GPIO Control</span><span class="spec-val">Via 5V relay module</span></div>
+          <div class="spec-row"><span class="spec-label">Cost</span><span class="spec-val">$8–$15 USD</span></div>
+        </div>
+        <div class="hw-card">
+          <div class="model">5V Single-Channel Relay Module</div>
+          <h4>GPIO Interface</h4>
+          <div class="spec-row"><span class="spec-label">Input</span><span class="spec-val">Jetson GPIO 3.3V/5V</span></div>
+          <div class="spec-row"><span class="spec-label">Output</span><span class="spec-val">Up to 250V AC / 10A DC</span></div>
+          <div class="spec-row"><span class="spec-label">Protection</span><span class="spec-val">Optocoupler isolated</span></div>
+          <div class="spec-row"><span class="spec-label">Why?</span><span class="spec-val">Protects Jetson GPIO from 12V</span></div>
+          <div class="spec-row"><span class="spec-label">Cost</span><span class="spec-val">$3–$5 USD</span></div>
+        </div>
+      </div>
+
+      <h3>5. GPIO Wiring — Buzzer Circuit</h3>
+      <div class="ascii">
+WIRING DIAGRAM (Beginner-Friendly):
+
+Jetson GPIO Header                    Relay Module
+  Pin 1  [3.3V] ──────────────────► VCC
+  Pin 6  [GND]  ──────────────────► GND
+  Pin 12 [GPIO] ──────────────────► IN  (signal)
+
+Relay Module Output        12V Horn Siren
+  COM  ──────────────────► (+) Positive
+  NO   ──────────────────► 12V Battery (+)
+                            12V Battery (-) ──► (-) Negative
+
+EXPLANATION:
+  When Jetson sets GPIO Pin 12 = HIGH (3.3V)
+      → Relay coil energizes
+      → COM connects to NO (Normally Open)
+      → 12V current flows through siren
+      → SIREN SOUNDS! 🔔
+
+  When GPIO Pin 12 = LOW (0V)
+      → Relay opens
+      → No current to siren
+      → Siren silent
+
+SAFETY: The relay electrically isolates the Jetson (3.3V logic)
+from the 12V siren. If siren breaks, Jetson is protected.
+      </div>
+
+      <h3>6. Power System</h3>
+      <table>
+        <thead><tr><th>Component</th><th>Specification</th><th>Cost</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Solar Panel</td><td>100W Monocrystalline, 12V</td><td>$60–$80</td><td>Primary power source</td></tr>
+          <tr><td>Solar Charge Controller</td><td>MPPT 30A, 12V/24V</td><td>$35</td><td>Manages charging safely</td></tr>
+          <tr><td>LiFePO4 Battery</td><td>12V 100Ah (1.2kWh)</td><td>$120</td><td>Night + cloudy day storage</td></tr>
+          <tr><td>DC-DC Converter</td><td>12V to 5V/19V, 60W</td><td>$18</td><td>Powers Jetson from battery</td></tr>
+          <tr><td>Battery Monitor</td><td>Victron BMV-712</td><td>$90</td><td>Track remaining power</td></tr>
+        </tbody>
+      </table>
+
+      <h3>7. Weatherproof Housing</h3>
+      <table>
+        <thead><tr><th>Item</th><th>Spec</th><th>Cost</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>IP67 Junction Box</td><td>300×200×150mm</td><td>$20</td><td>Houses Jetson + electronics</td></tr>
+          <tr><td>Silicone Sealant</td><td>RTV weatherproof</td><td>$8</td><td>Seal all cable entries</td></tr>
+          <tr><td>Cable Glands</td><td>PG11/PG13.5 sizes</td><td>$5/pack</td><td>Waterproof cable entry</td></tr>
+          <tr><td>Heater Module</td><td>12V PTC 10W heater</td><td>$12</td><td>Keeps box above 0°C</td></tr>
+          <tr><td>Thermal Paste</td><td>Arctic MX-4</td><td>$8</td><td>Jetson cooling</td></tr>
+          <tr><td>Mounting Pole</td><td>50mm steel, 3m</td><td>$25</td><td>Elevated camera mount</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn">
+        <strong>Ladakh Winter Warning</strong>
+        <p>Temperatures in Ladakh can reach -25°C. LiFePO4 batteries work down to -20°C (unlike lead-acid which fails below 0°C). Add a 12V PTC self-regulating heater pad inside the enclosure. This uses ~10W when cold and automatically shuts off when warm.</p>
+      </div>
+    </section>
+
+    <!-- PART 3: JETSON SETUP -->
+    <section id="p3" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 3</div>
+        <div class="part-title">Jetson Setup From Zero</div>
+        <div class="part-desc">Step-by-step guide to set up your Jetson from a blank board to a fully running detection system.</div>
+      </div>
+
+      <h2>Step 1 — Flash Ubuntu (JetPack) onto Jetson</h2>
+      <div class="callout info">
+        <strong>What is JetPack?</strong>
+        <p>JetPack is NVIDIA's version of Ubuntu Linux, pre-installed with GPU drivers, CUDA (GPU computing library), and all AI tools. Think of it as the "Windows" for your Jetson — but much more powerful for AI.</p>
+      </div>
+
+      <h4>On your laptop (Windows/Mac):</h4>
+      <pre><code><span class="comment"># 1. Download NVIDIA SDK Manager from:</span>
+<span class="comment">#    https://developer.nvidia.com/sdk-manager</span>
+
+<span class="comment"># 2. Install it, connect Jetson via USB-C to laptop</span>
+
+<span class="comment"># 3. Put Jetson in Recovery Mode:</span>
+<span class="comment">#    - Hold RECOVERY button</span>
+<span class="comment">#    - Press and release RESET button</span>
+<span class="comment">#    - Release RECOVERY button</span>
+
+<span class="comment"># 4. In SDK Manager, select:</span>
+<span class="comment">#    Target: Jetson Orin Nano 8GB</span>
+<span class="comment">#    JetPack Version: 5.1.3 or latest</span>
+<span class="comment">#    Click: Flash</span>
+
+<span class="comment"># This takes 20-30 minutes. Jetson boots Ubuntu automatically.</span></code></pre>
+
+      <h2>Step 2 — First Boot Setup</h2>
+      <pre><code><span class="comment"># Connect Jetson to monitor via HDMI, USB keyboard, USB mouse</span>
+<span class="comment"># Go through setup wizard — set username: jetson, password: bear2024</span>
+
+<span class="comment"># Open Terminal (Ctrl+Alt+T)</span>
+
+<span class="comment"># Update system first (needs internet via Ethernet on first setup)</span>
+<span class="cmd">sudo apt update && sudo apt upgrade -y</span>
+
+<span class="comment"># Install essential tools</span>
+<span class="cmd">sudo apt install -y curl git nano wget htop python3-pip python3-venv</span>
+<span class="cmd">sudo apt install -y v4l-utils net-tools iw hostapd dnsmasq</span></code></pre>
+
+      <h2>Step 3 — Connect and Test Camera</h2>
+      <pre><code><span class="comment"># Plugin USB camera to Jetson USB port</span>
+
+<span class="comment"># Check if camera is detected</span>
+<span class="cmd">ls /dev/video*</span>
+<span class="comment"># Should show: /dev/video0  (or video1, video2)</span>
+
+<span class="comment"># View camera details</span>
+<span class="cmd">v4l2-ctl --list-devices</span>
+
+<span class="comment"># Test camera — shows live feed (press Q to quit)</span>
+<span class="cmd">ffplay /dev/video0</span>
+
+<span class="comment"># Or using Python (install OpenCV first):</span>
+<span class="cmd">pip3 install opencv-python</span>
+<span class="cmd">python3 -c "import cv2; cap=cv2.VideoCapture(0); ret,frame=cap.read(); print('Camera OK!' if ret else 'Camera FAILED')"</span></code></pre>
+
+      <h2>Step 4 — Setup Python Environment</h2>
+      <pre><code><span class="comment"># Create project folder</span>
+<span class="cmd">mkdir -p ~/bear_system && cd ~/bear_system</span>
+
+<span class="comment"># Create isolated Python environment (good practice)</span>
+<span class="comment"># This keeps your project packages separate from system Python</span>
+<span class="cmd">python3 -m venv venv</span>
+
+<span class="comment"># Activate the environment (do this every time you work on project)</span>
+<span class="cmd">source venv/bin/activate</span>
+
+<span class="comment"># Your terminal now shows: (venv) jetson@jetson:~$</span>
+<span class="comment"># The (venv) prefix means environment is active</span>
+
+<span class="comment"># Install all required packages</span>
+<span class="cmd">pip install fastapi uvicorn websockets python-multipart</span>
+<span class="cmd">pip install ultralytics  # YOLOv8 for bear detection</span>
+<span class="cmd">pip install opencv-python-headless Pillow numpy</span>
+<span class="cmd">pip install paho-mqtt aiomqtt  # MQTT messaging</span>
+<span class="cmd">pip install RPi.GPIO  # GPIO control (for buzzer)</span>
+<span class="cmd">pip install aiofiles python-jose  # file handling</span></code></pre>
+
+      <h2>Step 5 — Create WiFi Hotspot (Access Point)</h2>
+      <div class="callout info">
+        <strong>What we're doing</strong>
+        <p>We're turning the Jetson into a WiFi router. Like your home router creates a WiFi network, the Jetson will create its own network called "BearAlert-Village1" that phones can connect to.</p>
+      </div>
+
+      <pre><code><span class="comment"># Check WiFi interface name</span>
+<span class="cmd">ip link show</span>
+<span class="comment"># Look for: wlan0 or wlp2s0 — this is your WiFi card name</span>
+
+<span class="comment"># Create hotspot configuration file</span>
+<span class="cmd">sudo nano /etc/hostapd/hostapd.conf</span>
+</code></pre>
+      <pre><code><span class="comment"># ============ PASTE THIS INTO THE FILE ============</span>
+<span class="comment"># Replace wlan0 with your actual WiFi interface name</span>
+
+interface=wlan0
+driver=nl80211
+ssid=BearAlert-Village1
+hw_mode=g
+channel=6
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=bear2024secure
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+<span class="comment"># Save file: Ctrl+X, then Y, then Enter</span></code></pre>
+
+      <pre><code><span class="comment"># Configure DHCP — assigns IP addresses to connected phones</span>
+<span class="cmd">sudo nano /etc/dnsmasq.conf</span>
+</code></pre>
+      <pre><code><span class="comment"># PASTE THIS:</span>
+interface=wlan0
+dhcp-range=192.168.100.10,192.168.100.50,255.255.255.0,24h
+dhcp-option=3,192.168.100.1
+dhcp-option=6,192.168.100.1
+address=/#/192.168.100.1</code></pre>
+
+      <pre><code><span class="comment"># Set static IP for Jetson's WiFi interface</span>
+<span class="cmd">sudo nano /etc/network/interfaces.d/wlan0</span>
+</code></pre>
+      <pre><code>auto wlan0
+iface wlan0 inet static
+  address 192.168.100.1
+  netmask 255.255.255.0</code></pre>
+
+      <pre><code><span class="comment"># Enable and start hotspot services</span>
+<span class="cmd">sudo systemctl unmask hostapd</span>
+<span class="cmd">sudo systemctl enable hostapd</span>
+<span class="cmd">sudo systemctl enable dnsmasq</span>
+<span class="cmd">sudo systemctl start hostapd</span>
+<span class="cmd">sudo systemctl start dnsmasq</span>
+
+<span class="comment"># Verify hotspot is running</span>
+<span class="cmd">sudo systemctl status hostapd</span>
+<span class="comment"># Should show: Active: active (running)</span>
+
+<span class="comment"># Test: On your phone, go to WiFi settings</span>
+<span class="comment"># You should see "BearAlert-Village1" in the list!</span>
+<span class="comment"># Connect with password: bear2024secure</span></code></pre>
+
+      <h2>Step 6 — Auto-Start on Boot</h2>
+      <div class="callout info">
+        <strong>Why this matters</strong>
+        <p>In the field, when power comes back after a blackout or solar cycle, the Jetson should automatically restart everything — detection, server, hotspot — without anyone pressing any buttons.</p>
+      </div>
+
+      <pre><code><span class="comment"># Create a systemd service file (Linux's way to auto-start programs)</span>
+<span class="cmd">sudo nano /etc/systemd/system/bear-detection.service</span>
+</code></pre>
+      <pre><code>[Unit]
+Description=Bear Detection System
+After=network.target hostapd.service
+Wants=hostapd.service
+
+[Service]
+Type=simple
+User=jetson
+WorkingDirectory=/home/jetson/bear_system
+Environment=PATH=/home/jetson/bear_system/venv/bin:/usr/bin:/bin
+ExecStart=/home/jetson/bear_system/venv/bin/python main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+
+      <pre><code><span class="comment"># Register and start the service</span>
+<span class="cmd">sudo systemctl daemon-reload</span>
+<span class="cmd">sudo systemctl enable bear-detection</span>
+<span class="cmd">sudo systemctl start bear-detection</span>
+
+<span class="comment"># Check if it's running</span>
+<span class="cmd">sudo systemctl status bear-detection</span>
+
+<span class="comment"># View live logs</span>
+<span class="cmd">journalctl -u bear-detection -f</span></code></pre>
+
+      <h2>Project Folder Structure</h2>
+      <pre><code><span class="comment"># Complete folder structure</span>
+/home/jetson/bear_system/
+├── main.py                 <span class="comment"># ← Entry point, starts everything</span>
+├── detector.py             <span class="comment"># ← AI bear detection logic</span>
+├── camera.py               <span class="comment"># ← Camera capture system</span>
+├── server.py               <span class="comment"># ← FastAPI + WebSocket server</span>
+├── gpio_controller.py      <span class="comment"># ← Buzzer GPIO control</span>
+├── mqtt_broker.py          <span class="comment"># ← MQTT messaging</span>
+├── streamer.py             <span class="comment"># ← RTSP live stream</span>
+├── storage.py              <span class="comment"># ← Save alerts to disk</span>
+├── config.py               <span class="comment"># ← All settings in one place</span>
+├── models/
+│   └── bear_yolov8.pt      <span class="comment"># ← Your trained AI model</span>
+├── data/
+│   ├── events/             <span class="comment"># ← Saved alert images</span>
+│   └── logs/               <span class="comment"># ← System logs</span>
+├── venv/                   <span class="comment"># ← Python virtual environment</span>
+└── requirements.txt        <span class="comment"># ← Package list</span></code></pre>
+    </section>
+
+    <!-- PART 4: NETWORKING -->
+    <section id="p4" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 4</div>
+        <div class="part-title">Offline Networking System</div>
+        <div class="part-desc">How devices talk to each other without internet. WebSocket, MQTT, and offline communication explained for beginners.</div>
+      </div>
+
+      <h2>How Offline Communication Works</h2>
+      <p>Think of it like a walkie-talkie system, but using WiFi instead of radio waves. The Jetson is the "base station" — it creates the WiFi network. Phones connect to it. They all talk directly to each other inside this tiny private WiFi network.</p>
+
+      <div class="ascii">
+NORMAL INTERNET COMMUNICATION (What we DON'T use):
+Phone → Router → ISP → Internet → Cloud Server → Phone
+      ← WiFi ← Fiber ← ...very long path... ←
+
+OUR OFFLINE COMMUNICATION (What we USE):
+Phone → Jetson WiFi → FastAPI Server → Phone
+      ← 192.168.100.1 ←     (5ms latency, no internet!)
+
+Distance: Phone to Jetson = 2 meters to 150 meters
+Latency (speed): Under 10 milliseconds
+Works: 100% offline, 100% local, 0% internet
+      </div>
+
+      <h2>WebSocket — How It Works</h2>
+      <p>HTTP (normal web) is like sending letters — you ask, you wait, you get a reply. WebSocket is like a phone call — once connected, both sides can talk instantly anytime. Perfect for alerts!</p>
+
+      <div class="ascii">
+HTTP (OLD WAY):
+  Phone: "Any alerts?"  →  Server: "No."
+  Phone: "Any alerts?"  →  Server: "No."
+  Phone: "Any alerts?"  →  Server: "No."
+  (Poll every second — wastes battery)
+
+WEBSOCKET (OUR WAY):
+  Phone connects → Server keeps connection open
+  ← Server: "BEAR ALERT! Image attached!" ← (instant push!)
+  ← Server: "Bear left area." ← (instant push!)
+  (No polling — very low battery use)
+
+URL: ws://192.168.100.1:8000/ws
+     ↑           ↑         ↑  ↑
+    Protocol  Jetson IP  Port Path
+      </div>
+
+      <h2>MQTT — For Events and Status</h2>
+      <pre><code><span class="comment"># MQTT is a lightweight messaging system</span>
+<span class="comment"># Like a notice board with categories (topics)</span>
+
+<span class="comment"># Install Mosquitto MQTT Broker on Jetson</span>
+<span class="cmd">sudo apt install mosquitto mosquitto-clients -y</span>
+<span class="cmd">sudo systemctl enable mosquitto</span>
+<span class="cmd">sudo systemctl start mosquitto</span>
+
+<span class="comment"># Configure Mosquitto for local-only access</span>
+<span class="cmd">sudo nano /etc/mosquitto/mosquitto.conf</span>
+</code></pre>
+      <pre><code>listener 1883 0.0.0.0
+allow_anonymous true
+persistence true
+persistence_location /var/lib/mosquitto/</code></pre>
+
+      <h2>Technology Comparison</h2>
+      <table>
+        <thead><tr><th>Technology</th><th>Latency</th><th>Power</th><th>Range</th><th>Complexity</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr><td>WebSocket</td><td>1–5ms</td><td>Low</td><td>WiFi range</td><td>Easy</td><td>✅ Images + Commands</td></tr>
+          <tr><td>MQTT</td><td>1–10ms</td><td>Very Low</td><td>WiFi range</td><td>Easy</td><td>✅ Status + Events</td></tr>
+          <tr><td>RTSP</td><td>100–500ms</td><td>Medium</td><td>WiFi range</td><td>Medium</td><td>✅ Live Video</td></tr>
+          <tr><td>Bluetooth</td><td>5–50ms</td><td>Very Low</td><td>10–30m</td><td>Easy</td><td>❌ Too short range</td></tr>
+          <tr><td>LoRa</td><td>1–5 sec</td><td>Extremely Low</td><td>2–10 km</td><td>Hard</td><td>✅ Village-to-village</td></tr>
+          <tr><td>WiFi Direct</td><td>5–50ms</td><td>Medium</td><td>100–200m</td><td>Hard</td><td>❌ Complex pairing</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout success">
+        <strong>Recommended Architecture</strong>
+        <p><strong>WebSocket</strong> for image push and buzzer commands (instant, bidirectional). <strong>MQTT</strong> for status events and logging (lightweight). <strong>RTSP</strong> for optional live video stream. <strong>LoRa</strong> if you need village-to-village coverage beyond WiFi range.</p>
+      </div>
+
+      <h2>IP Address Layout</h2>
+      <pre><code><span class="comment"># DHCP assigns these automatically when phones connect:</span>
+
+Jetson (Gateway):      192.168.100.1
+Ranger Phone 1:        192.168.100.10
+Ranger Phone 2:        192.168.100.11
+Village Leader Phone:  192.168.100.12
+Guard Station Phone:   192.168.100.13
+
+<span class="comment"># Services running on Jetson:</span>
+FastAPI Server:        http://192.168.100.1:8000
+WebSocket:             ws://192.168.100.1:8000/ws
+MQTT Broker:           mqtt://192.168.100.1:1883
+RTSP Stream:           rtsp://192.168.100.1:8554/live
+API Docs:              http://192.168.100.1:8000/docs</code></pre>
+    </section>
+
+    <!-- PART 5: BACKEND CODE -->
+    <section id="p5" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 5</div>
+        <div class="part-title">Complete Backend Code</div>
+        <div class="part-desc">Full production-ready Python code for detection, server, GPIO, MQTT, and all subsystems. Every line explained.</div>
+      </div>
+
+      <h2>config.py — All Settings</h2>
+      <pre><code><span class="comment"># config.py — Central configuration. Change settings here only.</span>
+<span class="keyword">from</span> pathlib <span class="keyword">import</span> Path
+
+<span class="comment"># Paths</span>
+BASE_DIR = Path(<span class="string">"/home/jetson/bear_system"</span>)
+MODEL_PATH = BASE_DIR / <span class="string">"models/bear_yolov8.pt"</span>
+DATA_DIR = BASE_DIR / <span class="string">"data/events"</span>
+LOG_DIR = BASE_DIR / <span class="string">"data/logs"</span>
+
+<span class="comment"># Camera settings</span>
+CAMERA_INDEX = <span class="num">0</span>               <span class="comment"># 0 = first USB camera</span>
+CAMERA_WIDTH = <span class="num">1920</span>            <span class="comment"># Resolution width</span>
+CAMERA_HEIGHT = <span class="num">1080</span>           <span class="comment"># Resolution height</span>
+CAMERA_FPS = <span class="num">30</span>               <span class="comment"># Frames per second</span>
+
+<span class="comment"># AI Detection</span>
+DETECTION_CONFIDENCE = <span class="num">0.70</span>   <span class="comment"># 70% minimum confidence</span>
+ALERT_COOLDOWN = <span class="num">30</span>           <span class="comment"># Seconds between alerts (prevent spam)</span>
+
+<span class="comment"># Network</span>
+SERVER_HOST = <span class="string">"0.0.0.0"</span>       <span class="comment"># Listen on all interfaces</span>
+SERVER_PORT = <span class="num">8000</span>            <span class="comment"># FastAPI port</span>
+MQTT_HOST = <span class="string">"localhost"</span>       <span class="comment"># MQTT on same machine</span>
+MQTT_PORT = <span class="num">1883</span>
+
+<span class="comment"># GPIO Pin Numbers (Jetson Orin Nano header)</span>
+BUZZER_GPIO_PIN = <span class="num">18</span>          <span class="comment"># BCM pin 18 = physical pin 12</span>
+LED_STATUS_PIN = <span class="num">23</span>           <span class="comment"># Status LED</span>
+
+<span class="comment"># Image compression</span>
+IMAGE_QUALITY = <span class="num">75</span>            <span class="comment"># JPEG quality (0-100)</span>
+MAX_IMAGE_SIZE = (<span class="num">800</span>, <span class="num">600</span>)   <span class="comment"># Max dimensions for sending</span></code></pre>
+
+      <h2>detector.py — AI Bear Detection</h2>
+      <pre><code><span class="comment"># detector.py — Runs YOLOv8 bear detection on camera frames</span>
+<span class="keyword">import</span> cv2
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">from</span> ultralytics <span class="keyword">import</span> YOLO
+<span class="keyword">import</span> logging
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+<span class="keyword">import</span> time
+<span class="keyword">from</span> config <span class="keyword">import</span> MODEL_PATH, DETECTION_CONFIDENCE, ALERT_COOLDOWN
+
+logger = logging.getLogger(<span class="string">__name__</span>)
+
+<span class="keyword">class</span> <span class="func">BearDetector</span>:
+    <span class="string">"""Loads AI model and detects bears in camera frames."""</span>
+    
+    <span class="keyword">def</span> <span class="func">__init__</span>(self):
+        <span class="comment"># Load the trained YOLOv8 model from disk</span>
+        logger.info(<span class="string">"Loading bear detection model..."</span>)
+        self.model = YOLO(str(MODEL_PATH))
+        self.last_alert_time = <span class="num">0</span>        <span class="comment"># Track last alert time</span>
+        logger.info(<span class="string">"Model loaded successfully!"</span>)
+    
+    <span class="keyword">def</span> <span class="func">detect</span>(self, frame: np.ndarray) -> dict:
+        <span class="string">"""
+        Analyze one camera frame.
+        Returns: dict with 'bear_detected', 'confidence', 'bbox'
+        """</span>
+        <span class="comment"># Run AI model on the frame</span>
+        results = self.model(frame, verbose=<span class="keyword">False</span>)
+        
+        <span class="comment"># Loop through all detected objects</span>
+        <span class="keyword">for</span> result <span class="keyword">in</span> results:
+            <span class="keyword">for</span> box <span class="keyword">in</span> result.boxes:
+                confidence = float(box.conf[<span class="num">0</span>])  <span class="comment"># 0.0 to 1.0</span>
+                class_id = int(box.cls[<span class="num">0</span>])
+                class_name = result.names[class_id]
+                
+                <span class="comment"># Check if it's a bear with enough confidence</span>
+                <span class="keyword">if</span> class_name == <span class="string">"bear"</span> <span class="keyword">and</span> confidence >= DETECTION_CONFIDENCE:
+                    <span class="comment"># Check cooldown (don't send 30 alerts per second)</span>
+                    current_time = time.time()
+                    <span class="keyword">if</span> current_time - self.last_alert_time < ALERT_COOLDOWN:
+                        <span class="keyword">return</span> {<span class="string">"bear_detected"</span>: <span class="keyword">False</span>}
+                    
+                    self.last_alert_time = current_time
+                    
+                    <span class="comment"># Get bounding box coordinates</span>
+                    x1, y1, x2, y2 = [int(v) <span class="keyword">for</span> v <span class="keyword">in</span> box.xyxy[<span class="num">0</span>]]
+                    
+                    <span class="comment"># Draw red rectangle on frame (so we can see what AI found)</span>
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (<span class="num">0</span>, <span class="num">0</span>, <span class="num">255</span>), <span class="num">2</span>)
+                    cv2.putText(frame, <span class="string">f"BEAR {confidence:.0%}"</span>,
+                               (x1, y1-<span class="num">10</span>), cv2.FONT_HERSHEY_SIMPLEX,
+                               <span class="num">0.9</span>, (<span class="num">0</span>, <span class="num">0</span>, <span class="num">255</span>), <span class="num">2</span>)
+                    
+                    logger.warning(<span class="string">f"BEAR DETECTED! Confidence: {confidence:.1%}"</span>)
+                    
+                    <span class="keyword">return</span> {
+                        <span class="string">"bear_detected"</span>: <span class="keyword">True</span>,
+                        <span class="string">"confidence"</span>: round(confidence, <span class="num">3</span>),
+                        <span class="string">"bbox"</span>: [x1, y1, x2, y2],
+                        <span class="string">"annotated_frame"</span>: frame,     <span class="comment"># Frame with red box drawn</span>
+                        <span class="string">"timestamp"</span>: datetime.now().isoformat()
+                    }
+        
+        <span class="keyword">return</span> {<span class="string">"bear_detected"</span>: <span class="keyword">False</span>}</code></pre>
+
+      <h2>server.py — FastAPI + WebSocket Server</h2>
+      <pre><code><span class="comment"># server.py — HTTP API + WebSocket server for app communication</span>
+<span class="keyword">import</span> asyncio
+<span class="keyword">import</span> base64
+<span class="keyword">import</span> json
+<span class="keyword">import</span> logging
+<span class="keyword">from</span> fastapi <span class="keyword">import</span> FastAPI, WebSocket, WebSocketDisconnect
+<span class="keyword">from</span> fastapi.responses <span class="keyword">import</span> JSONResponse
+<span class="keyword">import</span> cv2
+<span class="keyword">from</span> PIL <span class="keyword">import</span> Image
+<span class="keyword">import</span> io
+<span class="keyword">from</span> config <span class="keyword">import</span> MAX_IMAGE_SIZE, IMAGE_QUALITY
+
+logger = logging.getLogger(<span class="string">__name__</span>)
+app = FastAPI(title=<span class="string">"Bear Alert System"</span>)
+
+<span class="comment"># Store all connected phones/clients</span>
+connected_clients: list[WebSocket] = []
+
+<span class="keyword">class</span> <span class="func">BearAlertServer</span>:
+    
+    <span class="keyword">async def</span> <span class="func">send_alert_to_all</span>(self, frame, detection_data: dict):
+        <span class="string">"""
+        Compress image and send to ALL connected phones instantly.
+        This is like broadcasting a radio message to everyone.
+        """</span>
+        <span class="keyword">if not</span> connected_clients:
+            logger.info(<span class="string">"No phones connected. Alert stored locally."</span>)
+            <span class="keyword">return</span>
+        
+        <span class="comment"># Step 1: Resize image to save bandwidth</span>
+        img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        img.thumbnail(MAX_IMAGE_SIZE, Image.LANCZOS)
+        
+        <span class="comment"># Step 2: Compress to JPEG</span>
+        buffer = io.BytesIO()
+        img.save(buffer, format=<span class="string">"JPEG"</span>, quality=IMAGE_QUALITY)
+        
+        <span class="comment"># Step 3: Convert to base64 text (so JSON can carry it)</span>
+        img_b64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        <span class="comment"># Step 4: Build alert message</span>
+        alert_msg = json.dumps({
+            <span class="string">"type"</span>: <span class="string">"bear_alert"</span>,
+            <span class="string">"timestamp"</span>: detection_data[<span class="string">"timestamp"</span>],
+            <span class="string">"confidence"</span>: detection_data[<span class="string">"confidence"</span>],
+            <span class="string">"image_b64"</span>: img_b64,
+            <span class="string">"camera_id"</span>: <span class="string">"cam_01"</span>,
+            <span class="string">"location"</span>: <span class="string">"North Gate"</span>
+        })
+        
+        <span class="comment"># Step 5: Send to all connected phones simultaneously</span>
+        dead_clients = []
+        <span class="keyword">for</span> client <span class="keyword">in</span> connected_clients:
+            <span class="keyword">try</span>:
+                <span class="keyword">await</span> client.send_text(alert_msg)
+                logger.info(<span class="string">f"Alert sent to {client.client}"</span>)
+            <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+                dead_clients.append(client)  <span class="comment"># Phone disconnected</span>
+        
+        <span class="comment"># Remove disconnected phones</span>
+        <span class="keyword">for</span> client <span class="keyword">in</span> dead_clients:
+            connected_clients.remove(client)
+
+bear_server = BearAlertServer()
+
+<span class="comment"># ─────────── WebSocket Endpoint ───────────</span>
+<span class="keyword">@app</span>.websocket(<span class="string">"/ws"</span>)
+<span class="keyword">async def</span> <span class="func">websocket_endpoint</span>(websocket: WebSocket):
+    <span class="string">"""Phones connect here and stay connected."""</span>
+    <span class="keyword">await</span> websocket.accept()
+    connected_clients.append(websocket)
+    logger.info(<span class="string">f"Phone connected: {websocket.client} | Total: {len(connected_clients)}"</span>)
+    
+    <span class="keyword">try</span>:
+        <span class="keyword">while True</span>:
+            <span class="comment"># Wait for commands from the phone</span>
+            data = <span class="keyword">await</span> websocket.receive_text()
+            command = json.loads(data)
+            
+            <span class="keyword">if</span> command.get(<span class="string">"command"</span>) == <span class="string">"buzzer_on"</span>:
+                duration = command.get(<span class="string">"duration"</span>, <span class="num">10</span>)
+                <span class="keyword">from</span> gpio_controller <span class="keyword">import</span> gpio_ctrl
+                gpio_ctrl.activate_buzzer(duration)
+                <span class="keyword">await</span> websocket.send_text(json.dumps({
+                    <span class="string">"type"</span>: <span class="string">"command_ack"</span>,
+                    <span class="string">"status"</span>: <span class="string">"buzzer_activated"</span>,
+                    <span class="string">"duration"</span>: duration
+                }))
+                
+            <span class="keyword">elif</span> command.get(<span class="string">"command"</span>) == <span class="string">"buzzer_off"</span>:
+                <span class="keyword">from</span> gpio_controller <span class="keyword">import</span> gpio_ctrl
+                gpio_ctrl.deactivate_buzzer()
+    
+    <span class="keyword">except</span> WebSocketDisconnect:
+        connected_clients.remove(websocket)
+        logger.info(<span class="string">f"Phone disconnected. Remaining: {len(connected_clients)}"</span>)
+
+<span class="comment"># ─────────── HTTP Endpoints ───────────</span>
+<span class="keyword">@app</span>.get(<span class="string">"/status"</span>)
+<span class="keyword">async def</span> <span class="func">get_status</span>():
+    <span class="string">"""App can call this to check if Jetson is alive."""</span>
+    <span class="keyword">return</span> {<span class="string">"status"</span>: <span class="string">"online"</span>, <span class="string">"clients"</span>: len(connected_clients)}
+
+<span class="keyword">@app</span>.get(<span class="string">"/alerts"</span>)
+<span class="keyword">async def</span> <span class="func">get_alert_history</span>():
+    <span class="string">"""Return list of past alerts."""</span>
+    <span class="keyword">from</span> storage <span class="keyword">import</span> get_recent_alerts
+    <span class="keyword">return</span> {<span class="string">"alerts"</span>: get_recent_alerts(limit=<span class="num">50</span>)}</code></pre>
+
+      <h2>gpio_controller.py — Buzzer Control</h2>
+      <pre><code><span class="comment"># gpio_controller.py — Controls physical buzzer via GPIO pin</span>
+<span class="keyword">import</span> threading
+<span class="keyword">import</span> time
+<span class="keyword">import</span> logging
+<span class="keyword">from</span> config <span class="keyword">import</span> BUZZER_GPIO_PIN
+
+logger = logging.getLogger(<span class="string">__name__</span>)
+
+<span class="keyword">try</span>:
+    <span class="keyword">import</span> Jetson.GPIO <span class="keyword">as</span> GPIO
+    GPIO_AVAILABLE = <span class="keyword">True</span>
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(BUZZER_GPIO_PIN, GPIO.OUT, initial=GPIO.LOW)
+    logger.info(<span class="string">"GPIO initialized successfully"</span>)
+<span class="keyword">except</span> ImportError:
+    GPIO_AVAILABLE = <span class="keyword">False</span>
+    logger.warning(<span class="string">"GPIO not available — running in simulation mode"</span>)
+
+<span class="keyword">class</span> <span class="func">GPIOController</span>:
+    
+    <span class="keyword">def</span> <span class="func">__init__</span>(self):
+        self.buzzer_active = <span class="keyword">False</span>
+        self._timer = <span class="keyword">None</span>
+    
+    <span class="keyword">def</span> <span class="func">activate_buzzer</span>(self, duration_seconds: int = <span class="num">10</span>):
+        <span class="string">"""Turn on buzzer for specified seconds."""</span>
+        logger.warning(<span class="string">f"BUZZER ON — {duration_seconds} seconds"</span>)
+        self.buzzer_active = <span class="keyword">True</span>
+        
+        <span class="keyword">if</span> GPIO_AVAILABLE:
+            GPIO.output(BUZZER_GPIO_PIN, GPIO.HIGH)  <span class="comment"># Pin goes HIGH = relay ON = buzzer ON</span>
+        
+        <span class="comment"># Auto-turn off after duration (runs in background thread)</span>
+        <span class="keyword">if</span> self._timer:
+            self._timer.cancel()
+        self._timer = threading.Timer(duration_seconds, self.deactivate_buzzer)
+        self._timer.start()
+    
+    <span class="keyword">def</span> <span class="func">deactivate_buzzer</span>(self):
+        <span class="string">"""Turn off buzzer."""</span>
+        logger.info(<span class="string">"BUZZER OFF"</span>)
+        self.buzzer_active = <span class="keyword">False</span>
+        <span class="keyword">if</span> GPIO_AVAILABLE:
+            GPIO.output(BUZZER_GPIO_PIN, GPIO.LOW)  <span class="comment"># Pin LOW = relay OFF = buzzer OFF</span>
+    
+    <span class="keyword">def</span> <span class="func">cleanup</span>(self):
+        <span class="string">"""Called when system shuts down — safely turn off GPIO."""</span>
+        self.deactivate_buzzer()
+        <span class="keyword">if</span> GPIO_AVAILABLE:
+            GPIO.cleanup()
+
+<span class="comment"># Single global instance used by entire system</span>
+gpio_ctrl = GPIOController()</code></pre>
+
+      <h2>main.py — System Entry Point</h2>
+      <pre><code><span class="comment"># main.py — Starts everything. Run this file to launch the system.</span>
+<span class="keyword">import</span> asyncio
+<span class="keyword">import</span> cv2
+<span class="keyword">import</span> uvicorn
+<span class="keyword">import</span> threading
+<span class="keyword">import</span> logging
+<span class="keyword">from</span> detector <span class="keyword">import</span> BearDetector
+<span class="keyword">from</span> server <span class="keyword">import</span> app, bear_server
+<span class="keyword">from</span> storage <span class="keyword">import</span> save_alert
+<span class="keyword">from</span> config <span class="keyword">import</span> CAMERA_INDEX, CAMERA_WIDTH, CAMERA_HEIGHT, CAMERA_FPS
+
+<span class="comment"># Setup logging — all events saved to file AND shown on screen</span>
+logging.basicConfig(
+    level=logging.INFO,
+    format=<span class="string">"%(asctime)s [%(levelname)s] %(name)s: %(message)s"</span>,
+    handlers=[
+        logging.FileHandler(<span class="string">"/home/jetson/bear_system/data/logs/system.log"</span>),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(<span class="string">__name__</span>)
+
+<span class="keyword">async def</span> <span class="func">detection_loop</span>():
+    <span class="string">"""Main detection loop — runs continuously, never stops."""</span>
+    detector = BearDetector()
+    cap = cv2.VideoCapture(CAMERA_INDEX)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_WIDTH)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_HEIGHT)
+    cap.set(cv2.CAP_PROP_FPS, CAMERA_FPS)
+    
+    logger.info(<span class="string">"Bear detection started — watching camera..."</span>)
+    
+    <span class="keyword">while True</span>:
+        ret, frame = cap.read()
+        <span class="keyword">if not</span> ret:
+            logger.error(<span class="string">"Camera read failed! Retrying..."</span>)
+            <span class="keyword">await</span> asyncio.sleep(<span class="num">1</span>)
+            <span class="keyword">continue</span>
+        
+        <span class="comment"># Run AI detection (this is the key line!)</span>
+        result = detector.detect(frame)
+        
+        <span class="keyword">if</span> result[<span class="string">"bear_detected"</span>]:
+            logger.warning(<span class="string">f"🐻 BEAR! Confidence: {result['confidence']:.1%}"</span>)
+            
+            <span class="comment"># Save alert image to disk</span>
+            saved_path = save_alert(result[<span class="string">"annotated_frame"</span>], result)
+            
+            <span class="comment"># Push alert to all connected phones via WebSocket</span>
+            <span class="keyword">await</span> bear_server.send_alert_to_all(result[<span class="string">"annotated_frame"</span>], result)
+        
+        <span class="comment"># Process events without blocking (allow WebSocket to work)</span>
+        <span class="keyword">await</span> asyncio.sleep(<span class="num">0.033</span>)  <span class="comment"># ~30 FPS</span>
+
+<span class="keyword">async def</span> <span class="func">main</span>():
+    <span class="comment"># Start FastAPI server in background</span>
+    config = uvicorn.Config(app, host=<span class="string">"0.0.0.0"</span>, port=<span class="num">8000</span>, log_level=<span class="string">"warning"</span>)
+    server = uvicorn.Server(config)
+    
+    <span class="comment"># Run both detection and server at the same time</span>
+    <span class="keyword">await</span> asyncio.gather(
+        server.serve(),
+        detection_loop()
+    )
+
+<span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:
+    logger.info(<span class="string">"=== Bear Alert System Starting ==="</span>)
+    asyncio.run(main())</code></pre>
+
+      <h2>requirements.txt</h2>
+      <pre><code>fastapi==0.104.1
+uvicorn[standard]==0.24.0
+websockets==12.0
+python-multipart==0.0.6
+ultralytics==8.0.200
+opencv-python-headless==4.8.1.78
+Pillow==10.1.0
+numpy==1.24.4
+paho-mqtt==1.6.1
+aiomqtt==1.2.1
+aiofiles==23.2.1</code></pre>
+    </section>
+
+    <!-- PART 6: FLUTTER APP -->
+    <section id="p6" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 6</div>
+        <div class="part-title">Flutter Mobile App</div>
+        <div class="part-desc">Complete Flutter app with auto-connect, real-time alerts, image display, and buzzer control — all offline.</div>
+      </div>
+
+      <h2>Flutter Project Structure</h2>
+      <pre><code>bear_alert_app/
+├── lib/
+│   ├── main.dart              <span class="comment"># App entry point</span>
+│   ├── screens/
+│   │   ├── splash_screen.dart   <span class="comment"># Loading screen + auto-connect</span>
+│   │   ├── home_screen.dart     <span class="comment"># Main dashboard</span>
+│   │   ├── alert_screen.dart    <span class="comment"># Bear alert popup</span>
+│   │   ├── history_screen.dart  <span class="comment"># Past alerts</span>
+│   │   ├── stream_screen.dart   <span class="comment"># Live video</span>
+│   │   └── settings_screen.dart <span class="comment"># Configuration</span>
+│   ├── services/
+│   │   ├── websocket_service.dart  <span class="comment"># Connection to Jetson</span>
+│   │   ├── notification_service.dart <span class="comment"># Local notifications</span>
+│   │   └── storage_service.dart    <span class="comment"># SQLite local database</span>
+│   ├── models/
+│   │   └── alert_model.dart     <span class="comment"># Data structure</span>
+│   └── widgets/
+│       ├── bear_image_widget.dart
+│       └── buzzer_button.dart
+├── pubspec.yaml               <span class="comment"># Dependencies</span>
+└── android/
+    └── app/src/main/
+        └── AndroidManifest.xml <span class="comment"># Permissions</span></code></pre>
+
+      <h2>pubspec.yaml — Dependencies</h2>
+      <pre><code>name: bear_alert_app
+description: Offline Bear Detection Alert App for Ladakh
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  <span class="comment"># WebSocket communication</span>
+  web_socket_channel: ^2.4.0
+  
+  <span class="comment"># Local notifications (works offline)</span>
+  flutter_local_notifications: ^16.3.0
+  
+  <span class="comment"># Local database (SQLite — no internet)</span>
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  
+  <span class="comment"># MQTT client</span>
+  mqtt_client: ^10.0.0
+  
+  <span class="comment"># Video player for RTSP</span>
+  flutter_vlc_player: ^7.4.1
+  
+  <span class="comment"># State management</span>
+  provider: ^6.1.1
+  
+  <span class="comment"># Network discovery</span>
+  network_info_plus: ^5.0.0
+  
+  <span class="comment"># UI utilities</span>
+  intl: ^0.19.0
+  permission_handler: ^11.1.0</code></pre>
+
+      <h2>websocket_service.dart — Core Connection</h2>
+      <pre><code><span class="comment">// websocket_service.dart — Manages connection to Jetson</span>
+<span class="keyword">import</span> <span class="string">'dart:convert'</span>;
+<span class="keyword">import</span> <span class="string">'dart:async'</span>;
+<span class="keyword">import</span> <span class="string">'package:web_socket_channel/web_socket_channel.dart'</span>;
+
+<span class="keyword">class</span> <span class="func">WebSocketService</span> {
+  <span class="keyword">static const</span> String JETSON_IP = <span class="string">'192.168.100.1'</span>;
+  <span class="keyword">static const</span> int PORT = <span class="num">8000</span>;
+  
+  WebSocketChannel? _channel;
+  StreamController&lt;Map&lt;String, dynamic&gt;&gt; _alertController = 
+      StreamController.broadcast();
+  
+  <span class="comment">// Other code can listen to this stream for alerts</span>
+  Stream&lt;Map&lt;String, dynamic&gt;&gt; <span class="keyword">get</span> alertStream =&gt; _alertController.stream;
+  
+  <span class="keyword">bool</span> _isConnected = <span class="keyword">false</span>;
+  <span class="keyword">bool get</span> isConnected =&gt; _isConnected;
+  
+  Future&lt;<span class="keyword">void</span>&gt; <span class="func">connect</span>() <span class="keyword">async</span> {
+    <span class="keyword">try</span> {
+      <span class="keyword">final</span> uri = Uri.parse(
+        <span class="string">'ws://$JETSON_IP:$PORT/ws'</span>
+      );
+      
+      _channel = WebSocketChannel.connect(uri);
+      _isConnected = <span class="keyword">true</span>;
+      
+      <span class="comment">// Listen for messages from Jetson</span>
+      _channel!.stream.listen(
+        (message) =&gt; _handleMessage(message),
+        onError: (e) =&gt; _handleDisconnect(),
+        onDone: () =&gt; _handleDisconnect(),
+      );
+      
+      print(<span class="string">'✅ Connected to Jetson!'</span>);
+    } <span class="keyword">catch</span> (e) {
+      _isConnected = <span class="keyword">false</span>;
+      print(<span class="string">'❌ Connection failed: $e'</span>);
+      <span class="comment">// Auto-retry after 3 seconds</span>
+      Future.delayed(Duration(seconds: <span class="num">3</span>), connect);
+    }
+  }
+  
+  <span class="keyword">void</span> <span class="func">_handleMessage</span>(dynamic message) {
+    <span class="keyword">final</span> data = json.decode(message <span class="keyword">as</span> String);
+    
+    <span class="keyword">if</span> (data[<span class="string">'type'</span>] == <span class="string">'bear_alert'</span>) {
+      <span class="comment">// Push to all listeners (screens that are watching)</span>
+      _alertController.add(data);
+    }
+  }
+  
+  <span class="keyword">void</span> <span class="func">_handleDisconnect</span>() {
+    _isConnected = <span class="keyword">false</span>;
+    print(<span class="string">'Disconnected. Reconnecting in 3s...'</span>);
+    Future.delayed(Duration(seconds: <span class="num">3</span>), connect);
+  }
+  
+  <span class="comment">// Called when ranger presses "Activate Buzzer"</span>
+  <span class="keyword">void</span> <span class="func">activateBuzzer</span>({int durationSeconds = <span class="num">10</span>}) {
+    <span class="keyword">if</span> (!_isConnected) <span class="keyword">return</span>;
+    
+    <span class="keyword">final</span> command = json.encode({
+      <span class="string">'command'</span>: <span class="string">'buzzer_on'</span>,
+      <span class="string">'duration'</span>: durationSeconds,
+    });
+    
+    _channel!.sink.add(command);
+    print(<span class="string">'🔔 Buzzer command sent!'</span>);
+  }
+  
+  <span class="keyword">void</span> <span class="func">deactivateBuzzer</span>() {
+    <span class="keyword">if</span> (!_isConnected) <span class="keyword">return</span>;
+    _channel!.sink.add(json.encode({<span class="string">'command'</span>: <span class="string">'buzzer_off'</span>}));
+  }
+}</code></pre>
+
+      <h2>alert_screen.dart — Main Alert UI</h2>
+      <pre><code><span class="comment">// alert_screen.dart — Shows bear alert with image and actions</span>
+<span class="keyword">import</span> <span class="string">'dart:convert'</span>;
+<span class="keyword">import</span> <span class="string">'package:flutter/material.dart'</span>;
+
+<span class="keyword">class</span> <span class="func">AlertScreen</span> <span class="keyword">extends</span> StatefulWidget {
+  <span class="keyword">final</span> Map&lt;String, dynamic&gt; alertData;
+  <span class="keyword">const</span> AlertScreen({Key? key, <span class="keyword">required this</span>.alertData}) : super(key: key);
+  
+  @override
+  State&lt;AlertScreen&gt; <span class="func">createState</span>() =&gt; _AlertScreenState();
+}
+
+<span class="keyword">class</span> <span class="func">_AlertScreenState</span> <span class="keyword">extends</span> State&lt;AlertScreen&gt; {
+  <span class="keyword">bool</span> _buzzerActive = <span class="keyword">false</span>;
+  
+  @override
+  Widget <span class="func">build</span>(BuildContext context) {
+    <span class="keyword">final</span> confidence = (widget.alertData[<span class="string">'confidence'</span>] * <span class="num">100</span>).toStringAsFixed(1);
+    <span class="keyword">final</span> timestamp = widget.alertData[<span class="string">'timestamp'</span>];
+    <span class="keyword">final</span> imageBytes = base64Decode(widget.alertData[<span class="string">'image_b64'</span>]);
+    
+    <span class="keyword">return</span> Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.red[900],
+        title: Text(<span class="string">'🐻 BEAR DETECTED!'</span>,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
+      body: Column(
+        children: [
+          <span class="comment">// Red alert banner</span>
+          Container(
+            color: Colors.red[800],
+            padding: EdgeInsets.all(<span class="num">12</span>),
+            child: Row(children: [
+              Icon(Icons.warning, color: Colors.white, size: <span class="num">28</span>),
+              SizedBox(width: <span class="num">12</span>),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(<span class="string">'Bear Detected!'</span>,
+                  style: TextStyle(color: Colors.white, fontSize: <span class="num">18</span>,
+                    fontWeight: FontWeight.bold)),
+                Text(<span class="string">'Confidence: $confidence%  |  $timestamp'</span>,
+                  style: TextStyle(color: Colors.white70, fontSize: <span class="num">12</span>)),
+              ]),
+            ]),
+          ),
+          
+          <span class="comment">// Bear photo</span>
+          Expanded(
+            child: Image.memory(imageBytes, fit: BoxFit.contain),
+          ),
+          
+          <span class="comment">// Action buttons</span>
+          Padding(
+            padding: EdgeInsets.all(<span class="num">16</span>),
+            child: Column(children: [
+              <span class="comment">// ACTIVATE BUZZER — big red button</span>
+              SizedBox(
+                width: double.infinity,
+                height: <span class="num">64</span>,
+                child: ElevatedButton.icon(
+                  onPressed: _buzzerActive ? <span class="keyword">null</span> : _activateBuzzer,
+                  icon: Icon(Icons.volume_up, size: <span class="num">28</span>),
+                  label: Text(_buzzerActive ? <span class="string">'SIREN ACTIVE...'</span> : <span class="string">'ACTIVATE SIREN'</span>,
+                    style: TextStyle(fontSize: <span class="num">18</span>, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _buzzerActive ? Colors.grey : Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+              SizedBox(height: <span class="num">8</span>),
+              <span class="comment">// Stop siren</span>
+              <span class="keyword">if</span> (_buzzerActive)
+                TextButton(
+                  onPressed: _deactivateBuzzer,
+                  child: Text(<span class="string">'Stop Siren'</span>, style: TextStyle(color: Colors.grey)),
+                ),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  <span class="keyword">void</span> <span class="func">_activateBuzzer</span>() {
+    setState(() =&gt; _buzzerActive = <span class="keyword">true</span>);
+    <span class="comment">// This sends command to Jetson over WiFi</span>
+    context.read&lt;WebSocketService&gt;().activateBuzzer(durationSeconds: <span class="num">30</span>);
+  }
+  
+  <span class="keyword">void</span> <span class="func">_deactivateBuzzer</span>() {
+    setState(() =&gt; _buzzerActive = <span class="keyword">false</span>);
+    context.read&lt;WebSocketService&gt;().deactivateBuzzer();
+  }
+}</code></pre>
+
+      <h2>Building &amp; Installing the App</h2>
+      <pre><code><span class="comment"># Install Flutter on your laptop:</span>
+<span class="comment"># Download from https://flutter.dev/docs/get-started/install</span>
+
+<span class="comment"># Create project</span>
+<span class="cmd">flutter create bear_alert_app</span>
+<span class="cmd">cd bear_alert_app</span>
+
+<span class="comment"># Add dependencies to pubspec.yaml (paste the content above)</span>
+<span class="cmd">flutter pub get</span>
+
+<span class="comment"># Build APK for Android</span>
+<span class="cmd">flutter build apk --release</span>
+<span class="comment"># APK file: build/app/outputs/flutter-apk/app-release.apk</span>
+
+<span class="comment"># Install on phone (enable Developer Mode on Android first)</span>
+<span class="cmd">flutter install</span>
+
+<span class="comment"># Or copy APK to phone via USB and install manually</span></code></pre>
+
+      <div class="callout warn">
+        <strong>Android Permissions Required</strong>
+        <p>Add these to <code>android/app/src/main/AndroidManifest.xml</code>:</p>
+      </div>
+      <pre><code>&lt;<span class="tag-code">uses-permission</span> android:name=<span class="string">"android.permission.INTERNET"</span>/&gt;
+&lt;<span class="tag-code">uses-permission</span> android:name=<span class="string">"android.permission.ACCESS_WIFI_STATE"</span>/&gt;
+&lt;<span class="tag-code">uses-permission</span> android:name=<span class="string">"android.permission.CHANGE_WIFI_STATE"</span>/&gt;
+&lt;<span class="tag-code">uses-permission</span> android:name=<span class="string">"android.permission.VIBRATE"</span>/&gt;
+&lt;<span class="tag-code">uses-permission</span> android:name=<span class="string">"android.permission.RECEIVE_BOOT_COMPLETED"</span>/&gt;
+&lt;<span class="tag-code">uses-permission</span> android:name=<span class="string">"android.permission.POST_NOTIFICATIONS"</span>/&gt;</code></pre>
+    </section>
+
+    <!-- PART 7: STREAMING -->
+    <section id="p7" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 7</div>
+        <div class="part-title">Live Streaming System</div>
+        <div class="part-desc">Offline RTSP video streaming from Jetson camera to mobile app — no internet required.</div>
+      </div>
+
+      <h2>How Offline Live Streaming Works</h2>
+      <p>RTSP (Real-Time Streaming Protocol) is like a TV broadcast — the Jetson broadcasts the camera feed, and any phone on the same WiFi network can "tune in" to watch. No internet needed — it all happens within the local WiFi network.</p>
+
+      <div class="ascii">
+RTSP STREAMING FLOW:
+
+Camera → Jetson (mediamtx server) → RTSP stream
+                                         │
+                                    WiFi network
+                                         │
+                          ┌──────────────┼──────────────┐
+                          ▼              ▼              ▼
+                       Phone 1        Phone 2        Phone 3
+                   (VLC Player)   (VLC Player)   (VLC Player)
+
+URL to use in app: rtsp://192.168.100.1:8554/live
+
+LATENCY: ~200–500ms (acceptable for wildlife monitoring)
+BANDWIDTH: ~500KB/s per stream at 720p, 15fps
+      </div>
+
+      <h2>Setup RTSP Server (mediamtx)</h2>
+      <pre><code><span class="comment"># Download mediamtx — a lightweight RTSP server</span>
+<span class="cmd">cd ~/bear_system</span>
+<span class="cmd">wget https://github.com/bluenviron/mediamtx/releases/latest/download/mediamtx_linux_arm64v8.tar.gz</span>
+<span class="cmd">tar xvf mediamtx_linux_arm64v8.tar.gz</span>
+<span class="cmd">chmod +x mediamtx</span>
+
+<span class="comment"># Create mediamtx config</span>
+<span class="cmd">nano mediamtx.yml</span></code></pre>
+      <pre><code>paths:
+  live:
+    source: publisher
+    sourceProtocol: automatic</code></pre>
+
+      <pre><code><span class="comment"># Start RTSP server</span>
+<span class="cmd">./mediamtx mediamtx.yml &amp;</span>
+
+<span class="comment"># Start camera stream (push to RTSP server)</span>
+<span class="comment"># This converts camera to RTSP stream</span>
+<span class="cmd">ffmpeg -f v4l2 -framerate 15 -video_size 1280x720 -i /dev/video0 \
+  -c:v libx264 -preset ultrafast -tune zerolatency \
+  -b:v 800k -maxrate 1M -bufsize 500k \
+  -f rtsp rtsp://localhost:8554/live</span>
+
+<span class="comment"># Or use Python for more control:</span></code></pre>
+
+      <h2>streamer.py — Python RTSP Push</h2>
+      <pre><code><span class="comment"># streamer.py — Streams camera to RTSP for live viewing</span>
+<span class="keyword">import</span> subprocess
+<span class="keyword">import</span> threading
+<span class="keyword">import</span> logging
+
+logger = logging.getLogger(<span class="string">__name__</span>)
+
+<span class="keyword">class</span> <span class="func">RTSPStreamer</span>:
+    
+    <span class="keyword">def</span> <span class="func">start</span>(self, camera_index: int = <span class="num">0</span>):
+        <span class="string">"""Start RTSP stream in background."""</span>
+        cmd = [
+            <span class="string">"ffmpeg"</span>,
+            <span class="string">"-f"</span>, <span class="string">"v4l2"</span>,                    <span class="comment"># Input: Linux video device</span>
+            <span class="string">"-framerate"</span>, <span class="string">"15"</span>,               <span class="comment"># 15fps (saves bandwidth)</span>
+            <span class="string">"-video_size"</span>, <span class="string">"1280x720"</span>,       <span class="comment"># 720p resolution</span>
+            <span class="string">"-i"</span>, <span class="string">f"/dev/video{camera_index}"</span>, <span class="comment"># Camera device</span>
+            <span class="string">"-c:v"</span>, <span class="string">"libx264"</span>,               <span class="comment"># H.264 codec</span>
+            <span class="string">"-preset"</span>, <span class="string">"ultrafast"</span>,         <span class="comment"># Low CPU usage</span>
+            <span class="string">"-tune"</span>, <span class="string">"zerolatency"</span>,         <span class="comment"># Minimize delay</span>
+            <span class="string">"-b:v"</span>, <span class="string">"800k"</span>,                  <span class="comment"># 800kbps bitrate</span>
+            <span class="string">"-f"</span>, <span class="string">"rtsp"</span>,
+            <span class="string">"-rtsp_transport"</span>, <span class="string">"tcp"</span>,       <span class="comment"># More reliable than UDP</span>
+            <span class="string">"rtsp://localhost:8554/live"</span>
+        ]
+        
+        self._process = subprocess.Popen(cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL)
+        logger.info(<span class="string">"RTSP stream started: rtsp://192.168.100.1:8554/live"</span>)
+    
+    <span class="keyword">def</span> <span class="func">stop</span>(self):
+        <span class="keyword">if</span> self._process:
+            self._process.terminate()</code></pre>
+
+      <h2>Flutter VLC Player for RTSP</h2>
+      <pre><code><span class="comment">// stream_screen.dart — Live camera view in app</span>
+<span class="keyword">import</span> <span class="string">'package:flutter/material.dart'</span>;
+<span class="keyword">import</span> <span class="string">'package:flutter_vlc_player/flutter_vlc_player.dart'</span>;
+
+<span class="keyword">class</span> <span class="func">StreamScreen</span> <span class="keyword">extends</span> StatefulWidget {
+  @override
+  _StreamScreenState <span class="func">createState</span>() =&gt; _StreamScreenState();
+}
+
+<span class="keyword">class</span> <span class="func">_StreamScreenState</span> <span class="keyword">extends</span> State&lt;StreamScreen&gt; {
+  <span class="keyword">late</span> VlcPlayerController _controller;
+  
+  @override
+  <span class="keyword">void</span> <span class="func">initState</span>() {
+    super.initState();
+    <span class="comment">// Connect to Jetson RTSP stream</span>
+    _controller = VlcPlayerController.network(
+      <span class="string">'rtsp://192.168.100.1:8554/live'</span>,
+      hwAcc: HwAcc.full,
+      autoPlay: <span class="keyword">true</span>,
+      options: VlcPlayerOptions(
+        advanced: VlcAdvancedOptions([
+          VlcAdvancedOptions.networkCaching(<span class="num">300</span>),  <span class="comment">// Low latency</span>
+        ]),
+      ),
+    );
+  }
+  
+  @override
+  Widget <span class="func">build</span>(BuildContext context) {
+    <span class="keyword">return</span> Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(title: Text(<span class="string">'Live Camera Feed'</span>)),
+      body: Center(
+        child: VlcPlayer(
+          controller: _controller,
+          aspectRatio: <span class="num">16</span> / <span class="num">9</span>,
+          placeholder: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+    );
+  }
+  
+  @override
+  <span class="keyword">void</span> <span class="func">dispose</span>() {
+    _controller.stopRendererScanning();
+    _controller.dispose();
+    super.dispose();
+  }
+}</code></pre>
+    </section>
+
+    <!-- PART 8: RANGE -->
+    <section id="p8" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 8</div>
+        <div class="part-title">Range & Mountain Deployment</div>
+        <div class="part-desc">Signal range, mountain effects, antenna placement, and deployment strategy for Ladakh terrain.</div>
+      </div>
+
+      <h2>Expected WiFi Range</h2>
+      <table>
+        <thead><tr><th>Antenna Setup</th><th>Open Field</th><th>Village</th><th>With Obstacles</th></tr></thead>
+        <tbody>
+          <tr><td>Built-in omni (stock)</td><td>50–80m</td><td>30–50m</td><td>10–20m</td></tr>
+          <tr><td>9dBi omni antenna</td><td>150–300m</td><td>80–150m</td><td>30–60m</td></tr>
+          <tr><td>14dBi panel antenna</td><td>400–800m</td><td>200–400m</td><td>50–100m</td></tr>
+          <tr><td>24dBi dish antenna</td><td>2–5km</td><td>1–2km</td><td>Requires LOS</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Mountain Signal Effects</h2>
+      <div class="ascii">
+MOUNTAIN SIGNAL BLOCKAGE:
+
+    Mountain Peak
+         ████████████
+        ███          ███
+       ██              ██
+      ██                ██
+     ██                  ██
+    ██   [Jetson Unit]    ██
+   ██     WiFi Range:      ██
+  ██      ○ ○ ○ ○ ○        ██
+ ████████████████████████████
+
+PROBLEM: Signal cannot pass through mountains
+SOLUTION: Place unit with LINE-OF-SIGHT to village
+
+GOOD PLACEMENT:
+          ▲ Mountain
+         /|\
+        / | \        ← Jetson on high point
+       /  ●  \         (hill, rooftop, pole)
+      /  / \  \
+     /  /   \  \
+    /  /     \  \
+[Village A]  [Village B]
+   ← WiFi →  ← WiFi →
+   Both villages covered!
+      </div>
+
+      <h2>Antenna Placement Rules</h2>
+      <ul class="checklist">
+        <li>Always mount antenna as HIGH as possible (every 10m height ≈ 40% more range)</li>
+        <li>Ensure line-of-sight to all ranger locations — no mountains/buildings blocking</li>
+        <li>Point directional antennas toward the area with most rangers</li>
+        <li>Keep antenna away from metal surfaces (causes signal reflection/loss)</li>
+        <li>Use weatherproof coaxial cable (LMR-400 rated) for runs over 5m</li>
+        <li>Mount camera facing away from sunrise/sunset to avoid glare</li>
+      </ul>
+
+      <h2>Multi-Village Deployment Map</h2>
+      <div class="ascii">
+LARGE AREA COVERAGE — 3 VILLAGE SETUP:
+
+Village A                Village B              Village C
+(Main)                   (Relay)                (Remote)
+
+[Jetson A] ──WiFi──── 📱📱                     
+    │                                          
+    │ LoRa Radio (long range)                  
+    │ (covers 5-10km through mountains)        
+    └──────── LoRa ──────► [Jetson B] ──WiFi──📱📱
+                               │
+                               │ LoRa Radio
+                               └────────────► [Jetson C] ──WiFi──📱📱
+
+COVERAGE:
+  Village A WiFi: 150m radius  → Rangers within 150m
+  Village B WiFi: 150m radius  → Rangers within 150m
+  Village C WiFi: 150m radius  → Rangers within 150m
+  Jetson A to B via LoRa: 0–8km (through mountains)
+  Jetson B to C via LoRa: 0–8km
+
+COMMUNICATION FLOW (if bear detected at Village C):
+  1. Jetson C AI detects bear
+  2. Jetson C alerts phones in Village C via WiFi (instant)
+  3. Jetson C sends LoRa message to Jetson B
+  4. Jetson B relays LoRa to Jetson A
+  5. All rangers system-wide are alerted
+  Total time: ~3-5 seconds across all villages
+      </div>
+
+      <h2>LoRa Radio Setup for Long Range</h2>
+      <pre><code><span class="comment"># Install LoRa hardware: REYAX RYLR998 or similar</span>
+<span class="comment"># Connect to Jetson via UART (serial port)</span>
+
+<span class="comment"># Install serial library</span>
+<span class="cmd">pip install pyserial</span></code></pre>
+      <pre><code><span class="comment"># lora_bridge.py — LoRa village-to-village communication</span>
+<span class="keyword">import</span> serial
+<span class="keyword">import</span> threading
+<span class="keyword">import</span> time
+
+<span class="keyword">class</span> <span class="func">LoRaBridge</span>:
+    <span class="keyword">def</span> <span class="func">__init__</span>(self, port=<span class="string">"/dev/ttyTHS0"</span>, baud=<span class="num">115200</span>):
+        self.serial = serial.Serial(port, baud, timeout=<span class="num">1</span>)
+        self.node_id = <span class="num">1</span>  <span class="comment"># Unique ID for this village node</span>
+    
+    <span class="keyword">def</span> <span class="func">send_alert</span>(self, confidence: float, camera_id: str):
+        <span class="string">"""Send bear alert to all other LoRa nodes."""</span>
+        msg = <span class="string">f"BEAR,{confidence:.2f},{camera_id}"</span>
+        <span class="comment"># AT command format for RYLR998</span>
+        cmd = <span class="string">f"AT+SEND=0,{len(msg)},{msg}\r\n"</span>
+        self.serial.write(cmd.encode())
+    
+    <span class="keyword">def</span> <span class="func">listen</span>(self, callback):
+        <span class="string">"""Listen for alerts from other villages."""</span>
+        <span class="keyword">while True</span>:
+            line = self.serial.readline().decode().strip()
+            <span class="keyword">if</span> line.startswith(<span class="string">"+RCV="</span>):
+                <span class="comment"># Parse: +RCV=node_id,length,data,rssi,snr</span>
+                parts = line.split(<span class="string">","</span>)
+                data = parts[<span class="num">2</span>] <span class="keyword">if</span> len(parts) &gt; <span class="num">2</span> <span class="keyword">else</span> <span class="string">""</span>
+                <span class="keyword">if</span> data.startswith(<span class="string">"BEAR"</span>):
+                    callback(data)  <span class="comment"># Trigger local alerts too!</span></code></pre>
+    </section>
+
+    <!-- PART 9: MESH -->
+    <section id="p9" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 9</div>
+        <div class="part-title">Mesh Networking</div>
+        <div class="part-desc">Extend coverage across multiple villages using mesh WiFi — routers that connect to each other automatically.</div>
+      </div>
+
+      <h2>What Is Mesh Networking?</h2>
+      <p>Normal WiFi: Phone → Router → Cable → Internet (single point of failure). Mesh WiFi: Phone → Any Node ↔ Any Node ↔ Any Node (multiple paths — if one fails, data goes around it). Perfect for Ladakh where terrain blocks signals.</p>
+
+      <h2>BATMAN-adv — Best Approach for Ladakh</h2>
+      <div class="callout info">
+        <strong>What is BATMAN-adv?</strong>
+        <p>BATMAN stands for "Better Approach To Mobile Adhoc Networking". It's Linux software that makes multiple WiFi routers act as one seamless network — like magic. A phone connected to Node A can talk to the Jetson at Node C even if they're mountains apart, as long as there's a chain of nodes between them.</p>
+      </div>
+
+      <pre><code><span class="comment"># Install BATMAN-adv on each mesh node (Jetson or router)</span>
+<span class="cmd">sudo apt install batctl -y</span>
+<span class="cmd">sudo modprobe batman-adv</span>
+
+<span class="comment"># Configure mesh interface (do this on every node)</span>
+<span class="cmd">sudo ip link set wlan0 down</span>
+<span class="cmd">sudo iw wlan0 set type ibss</span>
+<span class="cmd">sudo ip link set wlan0 up</span>
+
+<span class="comment"># Join mesh network (same SSID + frequency on all nodes!)</span>
+<span class="cmd">sudo iw wlan0 ibss join bear-mesh 2412</span>  <span class="comment"># channel 1 = 2412 MHz</span>
+
+<span class="comment"># Add WiFi interface to batman</span>
+<span class="cmd">sudo batctl if add wlan0</span>
+<span class="cmd">sudo ip link set bat0 up</span>
+
+<span class="comment"># Set unique IP per node</span>
+<span class="comment"># Node 1 (main village): </span>
+<span class="cmd">sudo ip addr add 10.0.0.1/24 dev bat0</span>
+
+<span class="comment"># Node 2 (relay):</span>
+<span class="cmd">sudo ip addr add 10.0.0.2/24 dev bat0</span>
+
+<span class="comment"># Node 3 (remote village):</span>
+<span class="cmd">sudo ip addr add 10.0.0.3/24 dev bat0</span>
+
+<span class="comment"># Check mesh neighbors (should show other nodes)</span>
+<span class="cmd">sudo batctl neighbors</span>
+
+<span class="comment"># Test connectivity between nodes</span>
+<span class="cmd">ping 10.0.0.2</span>  <span class="comment"># Ping node 2 from node 1</span></code></pre>
+
+      <h2>Mesh Topology Diagram</h2>
+      <div class="ascii">
+BATMAN-adv MESH NETWORK:
+
+     [Node 1]          [Node 2]          [Node 3]
+   Village Center    Mountain Relay    Remote Village
+    bat0: 10.0.0.1   bat0: 10.0.0.2   bat0: 10.0.0.3
+         │                  │                │
+         │ ←── WiFi ──────► │ ◄── WiFi ──────│
+         │     (direct)     │     (direct)   │
+         │                  │                │
+         │ ←── WiFi (mesh route if Node 2 fails) ───────────► │
+         └────────────────────────────────────────────────────┘
+
+HOW BATMAN-adv WORKS:
+  - Each node broadcasts "I'm here!" messages every second
+  - Nodes learn the best path to each other automatically
+  - If Node 2 (relay) fails, Nodes 1 and 3 find another route
+  - Phones connect to nearest node (AP mode on same device)
+  - All data flows transparently across the mesh
+
+IP ROUTING EXAMPLE:
+  Phone (192.168.100.15) → Node 3 WiFi (192.168.100.3)
+                             → bat0 (10.0.0.3)
+                               → BATMAN routes via Node 2
+                                 → Node 1 Jetson (10.0.0.1)
+                                   → Server (192.168.100.1:8000)
+  All automatic! No manual routing needed.
+      </div>
+
+      <h2>OpenWRT for Dedicated Mesh Nodes</h2>
+      <p>For villages that need dedicated relay nodes (without a full Jetson), use cheap WiFi routers with OpenWRT firmware as mesh relays.</p>
+      <table>
+        <thead><tr><th>Router</th><th>Cost</th><th>WiFi</th><th>OpenWRT Support</th><th>Power</th></tr></thead>
+        <tbody>
+          <tr><td>GL.iNet GL-AR300M</td><td>$30</td><td>2.4GHz</td><td>✅ Native</td><td>2W</td></tr>
+          <tr><td>TP-Link WR841N</td><td>$20</td><td>2.4GHz</td><td>✅ Good</td><td>3W</td></tr>
+          <tr><td>GL.iNet GL-MT3000</td><td>$80</td><td>WiFi 6</td><td>✅ Native</td><td>5W</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- PART 10: POWER -->
+    <section id="p10" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 10</div>
+        <div class="part-title">Power System</div>
+        <div class="part-desc">Solar + battery design calculations for 24/7 operation in Ladakh's extreme cold and limited winter sun.</div>
+      </div>
+
+      <h2>Power Consumption Calculation</h2>
+      <table>
+        <thead><tr><th>Component</th><th>Power (Watts)</th><th>Hours/Day</th><th>Daily (Wh)</th></tr></thead>
+        <tbody>
+          <tr><td>Jetson Orin Nano (detection mode)</td><td>10W</td><td>24h</td><td>240 Wh</td></tr>
+          <tr><td>Camera (USB)</td><td>2W</td><td>24h</td><td>48 Wh</td></tr>
+          <tr><td>WiFi hotspot (active)</td><td>3W</td><td>24h</td><td>72 Wh</td></tr>
+          <tr><td>Box heater (Ladakh winter)</td><td>10W</td><td>12h</td><td>120 Wh</td></tr>
+          <tr><td>Siren (activated briefly)</td><td>6W</td><td>0.1h</td><td>0.6 Wh</td></tr>
+          <tr><td><strong>Total Daily</strong></td><td colspan="2"></td><td><strong>~481 Wh/day</strong></td></tr>
+        </tbody>
+      </table>
+
+      <h2>Solar Panel Sizing</h2>
+      <div class="ascii">
+LADAKH SOLAR CALCULATION:
+
+Location: Leh, Ladakh (34°N latitude)
+Summer peak sun hours: 6–7 hours/day
+Winter peak sun hours: 3–4 hours/day (worst case)
+
+WINTER CALCULATION (worst case):
+  Daily energy needed: 481 Wh
+  Peak sun hours:       3.5 hours
+  Inverter efficiency: 0.85
+  
+  Required panel: 481 / (3.5 × 0.85) = 162W
+
+→ USE: 200W panel (safety margin)
+→ Or TWO 100W panels (redundancy)
+
+SUMMER:
+  With 6 hours sun, 200W panel generates: 200 × 6 × 0.85 = 1,020 Wh
+  You consume 481 Wh → 539 Wh surplus per day for charging!
+      </div>
+
+      <h2>Battery Bank Sizing</h2>
+      <div class="ascii">
+BATTERY CALCULATION:
+
+Target autonomy: 3 days without sun (Ladakh snowstorms)
+
+Energy needed for 3 days:
+  481 Wh/day × 3 days = 1,443 Wh
+
+LiFePO4 usable capacity: 80% (never drain below 20%)
+Battery needed: 1,443 / 0.80 = 1,804 Wh
+
+At 12V: 1,804 / 12 = 150 Ah battery
+
+→ USE: 200Ah LiFePO4 at 12V (covers 4+ days)
+→ Cost: ~$200–$280 USD
+
+ALTERNATIVELY: Two 100Ah batteries in parallel (same voltage,
+double capacity, hot-swap one if the other fails)
+      </div>
+
+      <h2>Low-Power Optimization</h2>
+      <pre><code><span class="comment"># Jetson power optimization commands</span>
+
+<span class="comment"># Use NVIDIA power mode 0 (lowest power, still runs AI)</span>
+<span class="cmd">sudo nvpmodel -m 1</span>  <span class="comment"># 7W mode</span>
+
+<span class="comment"># Check current power mode</span>
+<span class="cmd">nvpmodel -q</span>
+
+<span class="comment"># Disable unnecessary services</span>
+<span class="cmd">sudo systemctl disable bluetooth</span>
+<span class="cmd">sudo systemctl disable cups</span>   <span class="comment"># Printer service (not needed!)</span>
+<span class="cmd">sudo systemctl disable avahi-daemon</span>
+
+<span class="comment"># Use headless mode (no desktop GUI = saves 2-3W)</span>
+<span class="cmd">sudo systemctl set-default multi-user.target</span>
+
+<span class="comment"># In Python: lower camera resolution during low-battery</span>
+<span class="comment"># Add this to main.py:</span></code></pre>
+      <pre><code><span class="keyword">def</span> <span class="func">check_battery_and_adjust</span>():
+    <span class="keyword">import</span> subprocess
+    <span class="comment"># Read battery voltage from ADC or battery monitor</span>
+    voltage = get_battery_voltage()  <span class="comment"># Your sensor reading</span>
+    
+    <span class="keyword">if</span> voltage < <span class="num">11.8</span>:  <span class="comment"># Below 40% for 12V LiFePO4</span>
+        <span class="comment"># Switch to low-power mode</span>
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, <span class="num">640</span>)   <span class="comment"># Lower resolution</span>
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, <span class="num">480</span>)
+        subprocess.run([<span class="string">"sudo"</span>, <span class="string">"nvpmodel"</span>, <span class="string">"-m"</span>, <span class="string">"2"</span>])  <span class="comment"># Lowest power</span>
+        logger.warning(<span class="string">"Low battery! Switched to power-save mode."</span>)</code></pre>
+
+      <h2>Complete Power System Wiring</h2>
+      <div class="ascii">
+POWER SYSTEM WIRING DIAGRAM:
+
+☀ Solar Panel (200W, 12V)
+      │
+      │ (MC4 connector)
+      ▼
+┌─────────────────┐
+│  MPPT Charge    │ ← Connects to solar panel
+│  Controller     │
+│  (30A, 12V)     │ → Connects to battery
+└────────┬────────┘
+         │
+         │ 12V DC
+         ▼
+┌─────────────────┐
+│  LiFePO4        │
+│  Battery        │ (12V, 200Ah)
+│  200Ah          │
+└────────┬────────┘
+         │
+         │ 12V DC
+    ┌────┴────────────────────────────┐
+    │                                │
+    ▼                                ▼
+┌──────────┐                  ┌──────────────┐
+│ DC-DC    │                  │  12V → Buzzer│
+│ 12V→19V  │                  │  (via relay) │
+│ Jetson   │                  └──────────────┘
+│ (60W)    │
+└──────────┘
+      </div>
+    </section>
+
+    <!-- PART 11: DEPLOYMENT -->
+    <section id="p11" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 11</div>
+        <div class="part-title">Complete Deployment Guide</div>
+        <div class="part-desc">Step-by-step field deployment — from unpacking hardware to a live running system in the village.</div>
+      </div>
+
+      <h2>Deployment Checklist</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>Hardware Assembly</h4>
+            <p>Mount Jetson in weatherproof box, connect camera, attach relay and buzzer, wire solar system.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4>Software Installation</h4>
+            <p>Flash JetPack, install Python packages, copy bear detection model, configure all settings.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4>WiFi Hotspot Verification</h4>
+            <p>Verify "BearAlert-Village1" network appears on phones. Confirm Jetson gets IP 192.168.100.1.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <h4>Camera Testing</h4>
+            <p>Check live feed, confirm night vision works, adjust angle for maximum coverage area.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <h4>App Installation</h4>
+            <p>Install Flutter APK on all ranger phones. Connect to hotspot. Verify app shows "Connected".</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-content">
+            <h4>Detection Test</h4>
+            <p>Walk in front of camera with a bear image/photo. Verify app receives alert within 2 seconds.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">7</div>
+          <div class="step-content">
+            <h4>Buzzer Test</h4>
+            <p>Press "Activate Siren" in app. Physical siren should sound within 1 second.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">8</div>
+          <div class="step-content">
+            <h4>Range Test</h4>
+            <p>Walk away from unit in different directions while watching app connectivity. Mark coverage boundary.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">9</div>
+          <div class="step-content">
+            <h4>Auto-Boot Test</h4>
+            <p>Cut power and restore. System should fully restart automatically within 60 seconds.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">10</div>
+          <div class="step-content">
+            <h4>Final Field Deployment</h4>
+            <p>Permanently mount unit on pole, seal all cable glands, point antenna toward village, leave running.</p>
+          </div>
+        </div>
+      </div>
+
+      <h2>Field Testing Commands</h2>
+      <pre><code><span class="comment"># On Jetson (connect via SSH over WiFi):</span>
+<span class="comment"># SSH from your laptop: ssh jetson@192.168.100.1</span>
+
+<span class="comment"># Check all services running</span>
+<span class="cmd">sudo systemctl status bear-detection hostapd dnsmasq mosquitto</span>
+
+<span class="comment"># Watch live detection log</span>
+<span class="cmd">journalctl -u bear-detection -f</span>
+
+<span class="comment"># Manually test buzzer</span>
+<span class="cmd">python3 -c "from gpio_controller import gpio_ctrl; gpio_ctrl.activate_buzzer(5)"</span>
+
+<span class="comment"># Check connected phones</span>
+<span class="cmd">cat /var/lib/misc/dnsmasq.leases</span>
+
+<span class="comment"># Check WiFi signal strength of connected devices</span>
+<span class="cmd">iw dev wlan0 station dump</span>
+
+<span class="comment"># Monitor CPU/GPU/Power usage</span>
+<span class="cmd">tegrastats</span>
+
+<span class="comment"># Check disk space (alert images accumulate)</span>
+<span class="cmd">df -h /home/jetson/bear_system/data</span>
+
+<span class="comment"># View recent alerts</span>
+<span class="cmd">ls -lt /home/jetson/bear_system/data/events/ | head -20</span></code></pre>
+
+      <h2>Troubleshooting Guide</h2>
+      <table>
+        <thead><tr><th>Problem</th><th>Likely Cause</th><th>Solution</th></tr></thead>
+        <tbody>
+          <tr><td>WiFi not showing on phones</td><td>hostapd not running</td><td><code>sudo systemctl restart hostapd</code></td></tr>
+          <tr><td>App can't connect</td><td>Phone IP wrong range</td><td>Forget WiFi, reconnect — DHCP will assign correct IP</td></tr>
+          <tr><td>No bear alerts</td><td>Camera not detected</td><td>Run <code>ls /dev/video*</code> — replug camera</td></tr>
+          <tr><td>Buzzer not sounding</td><td>GPIO wiring issue</td><td>Check relay LED lights when command sent</td></tr>
+          <tr><td>System slow after boot</td><td>Model loading takes time</td><td>Normal — YOLOv8 loads in 30–60 seconds</td></tr>
+          <tr><td>Battery draining fast</td><td>Box heater always on</td><td>Add thermostat — heater only below 5°C</td></tr>
+          <tr><td>Image too large/slow</td><td>High IMAGE_QUALITY setting</td><td>Lower to 60 in config.py</td></tr>
+          <tr><td>Alerts stopping at night</td><td>Camera no night vision</td><td>Add IR illuminator or switch to night-vision camera</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- PART 12: FINAL -->
+    <section id="p12" class="section">
+      <div class="part-header">
+        <div class="part-num">Part 12</div>
+        <div class="part-title">Final Production Architecture</div>
+        <div class="part-desc">Complete final system overview, production checklist, and maintenance guide.</div>
+      </div>
+
+      <h2>Final System Architecture</h2>
+      <div class="ascii">
+╔══════════════════════════════════════════════════════════════════╗
+║         LADAKH BEAR ALERT SYSTEM — PRODUCTION ARCHITECTURE      ║
+║                    Version 1.0 — Fully Offline                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌─────────────────── POWER LAYER ──────────────────────────────┐
+│  ☀ 200W Solar → MPPT Controller → 12V 200Ah LiFePO4 Battery │
+│  Battery → DC-DC 19V → Jetson | 12V → Relay → Siren         │
+│  Runtime: 4+ days without sun                                │
+└──────────────────────────────────────────────────────────────┘
+                              │ 19V DC
+┌─────────────────── SENSOR LAYER ─────────────────────────────┐
+│  IP67 Weatherproof Housing (-30°C to +60°C)                  │
+│  ┌───────────────────────────────────────────────────────┐   │
+│  │  Hikvision IP Camera (IR Night Vision, 30m range)     │   │
+│  │  USB → Jetson Orin Nano 8GB                           │   │
+│  │                                                       │   │
+│  │  AI PIPELINE:                                         │   │
+│  │  Camera Frame → YOLOv8 → 70%+ confidence → ALERT     │   │
+│  └───────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────── PROCESSING LAYER ─────────────────────────┐
+│  NVIDIA Jetson Orin Nano                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐    │
+│  │ Camera.py    │  │ Detector.py  │  │ Server.py       │    │
+│  │ OpenCV Cap.  │→ │ YOLOv8 GPU   │→ │ FastAPI         │    │
+│  │ 30 FPS       │  │ 40 TOPS AI   │  │ WebSocket       │    │
+│  └──────────────┘  └──────────────┘  │ REST API        │    │
+│                                      └────────┬────────┘    │
+│  ┌──────────────┐  ┌──────────────┐           │             │
+│  │ GPIO Control │  │ MQTT Broker  │           │             │
+│  │ Relay→Siren  │  │ Mosquitto    │           │             │
+│  └──────────────┘  └──────────────┘           │             │
+│  ┌──────────────┐  ┌──────────────┐           │             │
+│  │ RTSP Stream  │  │ Storage.py   │           │             │
+│  │ MediaMTX     │  │ SQLite + FS  │           │             │
+│  └──────────────┘  └──────────────┘           │             │
+└──────────────────────────────────────── WiFi ─┘─────────────┘
+                              │
+┌─────────────────── NETWORK LAYER ────────────────────────────┐
+│  WiFi Hotspot: "BearAlert-Village1" (WPA2, password secured) │
+│  IP Range: 192.168.100.1 – 192.168.100.50                    │
+│  Range: 150–400m depending on antenna                        │
+│  Max clients: 10 devices simultaneously                      │
+│  Optional: LoRa bridge to other villages (5–10km)            │
+└──────────────────────────────────────────────────────────────┘
+                              │ WiFi Signal
+┌─────────────────── CLIENT LAYER ─────────────────────────────┐
+│  Flutter Android App (bear_alert_app)                        │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Auto-connect to hotspot                            │    │
+│  │  WebSocket: ws://192.168.100.1:8000/ws              │    │
+│  │  MQTT: mqtt://192.168.100.1:1883                    │    │
+│  │  RTSP: rtsp://192.168.100.1:8554/live               │    │
+│  │                                                     │    │
+│  │  Features: Alert display | Image viewer | Siren btn │    │
+│  │            History | Live stream | Offline storage  │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                              │
+│  📱 Ranger 1  📱 Ranger 2  📱 Village Leader  📱 Guard Post │
+└──────────────────────────────────────────────────────────────┘
+      </div>
+
+      <h2>Final Folder Structure</h2>
+      <pre><code>/home/jetson/bear_system/
+├── main.py              <span class="comment"># Entry point (systemd runs this)</span>
+├── config.py            <span class="comment"># All configuration settings</span>
+├── detector.py          <span class="comment"># YOLOv8 bear detection</span>
+├── camera.py            <span class="comment"># Camera capture + frame management</span>
+├── server.py            <span class="comment"># FastAPI + WebSocket server</span>
+├── gpio_controller.py   <span class="comment"># Buzzer/relay control</span>
+├── mqtt_broker.py       <span class="comment"># MQTT event publishing</span>
+├── streamer.py          <span class="comment"># RTSP live stream</span>
+├── storage.py           <span class="comment"># Alert storage + retrieval</span>
+├── lora_bridge.py       <span class="comment"># LoRa village-to-village (optional)</span>
+├── mediamtx             <span class="comment"># RTSP server binary</span>
+├── mediamtx.yml         <span class="comment"># RTSP server config</span>
+├── requirements.txt     <span class="comment"># Python dependencies</span>
+├── models/
+│   └── bear_yolov8.pt   <span class="comment"># Trained bear detection model</span>
+├── data/
+│   ├── events/          <span class="comment"># Alert images (YYYY-MM-DD/HH-MM-SS.jpg)</span>
+│   ├── alerts.db        <span class="comment"># SQLite database of all alerts</span>
+│   └── logs/
+│       └── system.log   <span class="comment"># All system events</span>
+└── venv/                <span class="comment"># Python virtual environment</span>
+
+System Services:
+/etc/systemd/system/bear-detection.service
+/etc/hostapd/hostapd.conf
+/etc/dnsmasq.conf
+/etc/mosquitto/mosquitto.conf</code></pre>
+
+      <h2>Production Readiness Checklist</h2>
+      <ul class="checklist">
+        <li>JetPack 5.x installed and updated on Jetson</li>
+        <li>Bear detection model (bear_yolov8.pt) tested with real bear images — >80% accuracy</li>
+        <li>WiFi hotspot broadcasting — tested from 150m distance</li>
+        <li>FastAPI server auto-starts on boot (systemd service enabled)</li>
+        <li>WebSocket delivers alerts in under 2 seconds after detection</li>
+        <li>Buzzer activates within 1 second of app command</li>
+        <li>Flutter APK installed on all ranger phones</li>
+        <li>Auto-reconnect works — tested by disconnecting phone and walking back</li>
+        <li>System auto-restarts after power cut — tested with power off/on</li>
+        <li>Solar panel producing adequate power — checked with battery monitor</li>
+        <li>Weatherproof enclosure sealed — checked all cable glands</li>
+        <li>Box heater maintains >5°C inside enclosure during cold nights</li>
+        <li>Alert history stores images correctly — checked after 24h of operation</li>
+        <li>Live RTSP stream viewable in app</li>
+        <li>LoRa communication tested between villages (if multi-village setup)</li>
+        <li>All rangers trained on app operation (15-minute training session)</li>
+        <li>Maintenance log created — monthly check schedule established</li>
+        <li>Spare parts stored: 1x relay, fuses, SD card backup of OS image</li>
+      </ul>
+
+      <h2>Monthly Maintenance Tasks</h2>
+      <pre><code><span class="comment"># SSH into Jetson: ssh jetson@192.168.100.1</span>
+
+<span class="comment"># 1. Check disk space (images accumulate)</span>
+<span class="cmd">df -h /home/jetson/bear_system/data</span>
+<span class="comment"># If &lt; 20% free, archive old alerts:</span>
+<span class="cmd">tar -czf /home/jetson/archive_$(date +%Y%m).tar.gz \
+  /home/jetson/bear_system/data/events/$(date -d '30 days ago' +%Y-%m)*</span>
+
+<span class="comment"># 2. Check system logs for errors</span>
+<span class="cmd">journalctl -u bear-detection --since "30 days ago" | grep -i error</span>
+
+<span class="comment"># 3. Check battery health</span>
+<span class="cmd">cat /sys/class/power_supply/BAT0/capacity</span>
+
+<span class="comment"># 4. Check camera is working</span>
+<span class="cmd">v4l2-ctl --list-devices</span>
+
+<span class="comment"># 5. Restart system cleanly</span>
+<span class="cmd">sudo systemctl restart bear-detection</span>
+
+<span class="comment"># 6. Update software (if you have internet via ethernet temporarily)</span>
+<span class="cmd">cd ~/bear_system && git pull && pip install -r requirements.txt</span></code></pre>
+
+      <div class="callout success">
+        <strong>System Complete</strong>
+        <p>Your Ladakh Brown Bear Detection System is now fully designed and documented. This guide covers everything from a blank Jetson board to a production-deployed village system — working completely offline, 24/7, in the harshest mountain conditions. The system can detect bears, alert rangers, activate sirens, and log all events without ever touching the internet.</p>
+      </div>
+
+      <h2>Quick Reference Card</h2>
+      <table>
+        <thead><tr><th>URL / Address</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>192.168.100.1</code></td><td>Jetson IP address (connect here)</td></tr>
+          <tr><td><code>ws://192.168.100.1:8000/ws</code></td><td>WebSocket (app connection)</td></tr>
+          <tr><td><code>http://192.168.100.1:8000/status</code></td><td>System health check</td></tr>
+          <tr><td><code>http://192.168.100.1:8000/docs</code></td><td>API documentation</td></tr>
+          <tr><td><code>rtsp://192.168.100.1:8554/live</code></td><td>Live video stream</td></tr>
+          <tr><td><code>mqtt://192.168.100.1:1883</code></td><td>MQTT broker</td></tr>
+          <tr><td><code>ssh jetson@192.168.100.1</code></td><td>Remote terminal access</td></tr>
+          <tr><td>WiFi: <code>BearAlert-Village1</code></td><td>Network name</td></tr>
+          <tr><td>WiFi Password: <code>bear2024secure</code></td><td>Change after deployment!</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
